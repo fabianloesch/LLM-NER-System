@@ -1,7 +1,5 @@
 from fastapi import FastAPI
+from app.api import usage_router
 
 app = FastAPI()
-
-@app.get("/")
-def root():
-    return {"Hello": "World"}
+app.include_router(usage_router.router, prefix="/api")
