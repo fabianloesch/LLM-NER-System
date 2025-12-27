@@ -6,13 +6,13 @@ class UsageService:
     def __init__(self, openrouter_service: OpenRouterService = None):
         self._openrouter = openrouter_service
 
-    def run_ner_model(self, text: str, entity_classes: list, llm_name: str):
-        content = self._openrouter.send_prompt(text, entity_classes, llm_name)["choices"][0]["message"]["content"]
+    def create_ner_response(self, text: str, entity_classes: list, llm_id: str):
+        content = self._openrouter.run_ner_model(text, entity_classes, llm_id)["choices"][0]["message"]["content"]
         entities = self.inline_ner_to_json(content)
         result = {
             "text": text,
             "labels": entity_classes,
-            "model": llm_name,
+            "model": llm_id,
             "entities": entities
         }
         return result

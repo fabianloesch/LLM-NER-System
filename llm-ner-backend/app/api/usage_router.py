@@ -15,5 +15,5 @@ def create_new_model_run(
     request: UsageRequestDto,
     usage_service: OpenRouterService = Depends(get_usage_service)
 ):
-    result = usage_service.run_ner_model(request.text, request.entity_classes, request.llm_name)
+    result = usage_service.create_ner_response(request.text, request.entity_classes, request.llm_id)
     return {"result": result}

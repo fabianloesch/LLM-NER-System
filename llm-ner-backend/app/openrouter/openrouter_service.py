@@ -1,10 +1,23 @@
 from app.openrouter.openrouter_client import OpenRouterClient
+from datetime import datetime, timezone
 
 class OpenRouterService:
     def __init__(self, client: OpenRouterClient):
         self.client = client
+
+    def get_available_models(self):
+        models_detailed = self.client.get_available_models()["data"]
+        models_compact = [
+            {
+                "id": m["id"],
+                "name": m["name"],
+                "createdAtUtc": datetime.fromtimestamp(m["created"], tz=timezone.utc)
+            }
+            for m in models_detailed
+        ]
+        return models_compact
  
-    def send_prompt(self, text: str, entityclasses: list, llm_name: str) -> str:
+    def run_ner_model(self, text: str, entityclasses: list, llm_id: str) -> str:
         prompt = f"""
             Ich möchte dich als Named-Entity-Recognition-Modell für medizinische Texte benutzen. Deine Aufgabe ist es in Texten bestimmte Entitäten zu erkennen. 
             Es werden Entitäten folgender Entitätsklassen gesucht: {", ".join(entityclasses)}. 
@@ -18,7 +31,7 @@ class OpenRouterService:
             {text}
             """
 
-        response = self.client.create_response(prompt, llm_name)
+        response = self.client.create_chat_completition(prompt, llm_id)
 
         # OpenRouter Response extrahieren
         return response

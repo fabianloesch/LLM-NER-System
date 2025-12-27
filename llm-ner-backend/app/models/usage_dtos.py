@@ -6,4 +6,4 @@ class UsageResponseDto(BaseModel):
 class UsageRequestDto(BaseModel):
     text: str
     entity_classes: list
-    llm_name: str
+    llm_id: str
