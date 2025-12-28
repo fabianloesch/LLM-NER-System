@@ -15,7 +15,7 @@ def start_new_model_run(
     request: UsageRequestDto,
     usage_service: UsageService = Depends(get_usage_service)
 ):
-    result = usage_service.create_ner_response(request.text, request.entity_classes, request.llm_id)
+    result = usage_service.create_usage_response(request.text, request.entity_classes, request.llm_id)
     return {"result": result}
 
 @router.get("/modelRuns")

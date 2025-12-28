@@ -1,11 +1,23 @@
 from app.openrouter.openrouter_service import OpenRouterService
-import re
+from app.models.evaluation_dtos import CorpusEntry
+import app.core.utils as utils
 
 class EvaluationService:
 
     def __init__(self, openrouter_service: OpenRouterService = None):
         self._openrouter = openrouter_service
 
-    def create_ner_evaluation(self, text: str, entity_classes: list, llm_id: str):
-        raise NotImplementedError
+    def create_evaluation_response(self, corpus: list[CorpusEntry], llm_ids: list[str]):
+        entity_classes = utils.get_distinct_entity_classes(corpus)
+        response = {}
+        for llm_id in llm_ids:
+            llm_base_metrics = {}
+            for entry in corpus:
+                pred = self._openrouter.run_ner_model(entry["text"], entity_classes, llm_id)
+                entry_base_metrics = utils.compute_base_eval_metric(truth=entry, prediction=pred)
+                llm_base_metrics = utils.add_base_metrics_dicts(llm_base_metrics, entry_base_metrics)
+            llm_eval_result = utils.compute_eval_metrics(llm_base_metrics)
+            response[llm_id] = llm_eval_result
+        return response
+    
     

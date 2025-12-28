@@ -14,7 +14,9 @@ def start_new_model_evaluation(
     request: EvaluationRequestDto,
     evaluation_service: EvaluationService = Depends(get_evaluation_service)
 ):
-    raise NotImplementedError
+    request = request.model_dump()
+    result = evaluation_service.create_evaluation_response(request["corpus"], request["llm_ids"])
+    return {"result": result}
 
 @router.get("/modelEvaluations")
 def get_all_model_evaluations(

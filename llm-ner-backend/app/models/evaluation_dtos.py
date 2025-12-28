@@ -1,9 +1,25 @@
+from typing import List, Tuple
 from pydantic import BaseModel
 
+class Metrics(BaseModel):
+    precision: float
+    recall: float
+    f1_score: float
+
+class MetricLevels(BaseModel):
+    overall: Metrics
+    entityClassLevel: dict[str, Metrics]
+
 class EvaluationResponseDto(BaseModel):
-    result: dict
+    result: dict[str, MetricLevels]
+
+Entity = Tuple[int, int, str]
+
+class CorpusEntry(BaseModel):
+    id: int
+    text: str
+    label: list[Entity]
 
 class EvaluationRequestDto(BaseModel):
-    text: str
-    entity_classes: list
-    llm_id: str
+    corpus: list[CorpusEntry]
+    llm_ids: list[str]
