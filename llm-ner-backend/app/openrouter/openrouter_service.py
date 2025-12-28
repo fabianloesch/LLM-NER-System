@@ -23,7 +23,7 @@ class OpenRouterService:
             Es werden Entitäten folgender Entitätsklassen gesucht: {", ".join(entityclasses)}. 
             Um Teile des Textes als Entität zu kennzeichen, nutze bitte eine Inline-Maskierung nach dem Format <entityClassName>exampleEntity</entityClassName>. 
             Gebe bitte immer den gesamten Eingabetext inklusive der Maskierung als Antwort wieder. 
-            Beispiel: Bei der Entitätsklasse "Drug" und dem Text "Der Arzt gibt dem Patienten Ibuprofen." müsste die Antwort folgendermaßen lauten: "Der Arzt gibt dem Patienten <Drug>Ibuprofen</Drug>.".
+            Beispiel: Bei der Entitätsklasse "Indication" und dem Text "Der Arzt verschreibt Amoxicillin wegen bakterieller Bronchitis." müsste die Antwort folgendermaßen lauten: "Der Arzt verschreibt Amoxicillin wegen <Indication>bakterieller Bronchitis</Indication>.".
             Neben den Entitätsmaskierungen darfst du auf keinen Fall weitere Zeichen zum Text hinzufügen.
             Es ist sehr wichtig, dass die Antwort diesem Format entspricht, da sie sonst nicht verwendet werden kann. Antworte nur mit diesem Format, ohne weiteren Text, Erklärungen oder sonstige vorgestellte Zeichen.
             Möglicherweise sind in dem zu untersuchenden Text keine Entitäten der relevanten Entitätsklassen zu finden. Sollte dies der Fall sein, gib bitte exakt den Eingabetext ohne Entitätsmaskierungen wieder. 
