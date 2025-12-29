@@ -1,5 +1,5 @@
-import requests
 from app.core.config import config
+import httpx
 
 class OpenRouterClient:
     CHAT_COMPLETION_URL = "https://openrouter.ai/api/v1/chat/completions"
@@ -10,15 +10,16 @@ class OpenRouterClient:
             "Authorization": config.OPENROUTER_API_KEY,
             "Content-Type": "application/json",
         }
+        self.client = httpx.AsyncClient(timeout=100.0)
 
-    def get_available_models(self) -> dict:
-        response = requests.get(
+    async def get_available_models(self) -> dict:
+        response = await self.client.get(
             self.AVAILABLE_MODELS_URL, 
             headers=self.headers)
         response.raise_for_status()
         return response.json()
 
-    def create_chat_completition(self, prompt: str, model: str) -> dict:
+    async def create_chat_completition(self, prompt: str, model: str) -> dict:
         payload = {
             "model": model,
             "messages": [
@@ -29,13 +30,15 @@ class OpenRouterClient:
             ],
         }
 
-        response = requests.post(
+        response = await self.client.post(
             self.CHAT_COMPLETION_URL,
             json=payload,
             headers=self.headers,
         )
         response.raise_for_status()
         return response.json()
+    
+
 
 class Roles:
     system = "system"

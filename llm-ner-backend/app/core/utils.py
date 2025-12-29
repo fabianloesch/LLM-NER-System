@@ -1,4 +1,5 @@
 import re
+from collections import defaultdict
 
 # collection of serveral functions
 
@@ -207,3 +208,14 @@ def inline_ner_to_json(text: str):
 
         return result
 
+def restructure(data: list[dict]) -> dict:
+    result = defaultdict(dict)
+
+    for item in data:
+        model = item["model"]
+        identifier = item["identifier"]
+        response = item["response"]
+
+        result[model][identifier] = response
+
+    return dict(result)

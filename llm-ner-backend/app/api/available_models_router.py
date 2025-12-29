@@ -9,8 +9,8 @@ def get_openrouter_service():
     return OpenRouterService(OpenRouterClient())
 
 @router.get("/availableModels", response_model=AvailableModelsResponseDto)
-def get_available_models(
+async def get_available_models(
     openrouter_service: OpenRouterService = Depends(get_openrouter_service)
 ):
-    result = openrouter_service.get_available_models()
+    result = await openrouter_service.get_available_models()
     return {"result": result}

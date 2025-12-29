@@ -1,13 +1,14 @@
 from app.openrouter.openrouter_client import OpenRouterClient
 from datetime import datetime, timezone
 import app.core.utils as utils
+import asyncio
 
 class OpenRouterService:
     def __init__(self, client: OpenRouterClient):
         self.client = client
 
-    def get_available_models(self):
-        models_detailed = self.client.get_available_models()["data"]
+    async def get_available_models(self):
+        models_detailed = (await self.client.get_available_models())["data"]
         models_compact = [
             {
                 "id": m["id"],
@@ -18,7 +19,7 @@ class OpenRouterService:
         ]
         return models_compact
  
-    def run_ner_model(self, text: str, entity_classes: list, llm_id: str) -> str:
+    async def run_ner_model(self, text: str, entity_classes: list, llm_id: str, identifier: int = None) -> dict[str]:
         prompt = f"""
             Ich möchte dich als Named-Entity-Recognition-Modell für medizinische Texte benutzen. Deine Aufgabe ist es in Texten bestimmte Entitäten zu erkennen.  
             Um Teile des Textes als Entität zu kennzeichen, nutze bitte eine Inline-Maskierung nach dem Format <entityClassName>exampleEntity</entityClassName>. 
@@ -32,8 +33,25 @@ class OpenRouterService:
             {text}
             """
 
-        response = self.client.create_chat_completition(prompt, llm_id)["choices"][0]["message"]["content"]
+        response = (await self.client.create_chat_completition(prompt, llm_id))["choices"][0]["message"]["content"]
         response = utils.inline_ner_to_json(response)
+        response = {
+            'model': llm_id,
+            'identifier': identifier,
+            'response': response
+        }
+
+        print(str(llm_id) + " " + str(identifier))
 
         # OpenRouter Response extrahieren
         return response
+    
+    async def run_ner_model_batch(self, corpus: list, entity_classes: list, llm_ids: list) -> dict[str]:
+        results = await asyncio.gather(
+        *(self.run_ner_model(entry["text"], entity_classes, llm, entry["id"])
+        for llm in llm_ids
+        for entry in corpus)
+        )
+        results = utils.restructure(results)
+        print(results)
+        return results
