@@ -10,6 +10,7 @@ class Config(BaseSettings):
     DB_USER: str = ""
     DB_PASSWORD: str = ""
     DB_NAME: str = ""
+    MONGO_DB_CONNECTION_STRING: str = ""
 
 
     class Config:

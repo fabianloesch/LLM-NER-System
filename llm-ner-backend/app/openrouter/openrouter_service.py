@@ -40,9 +40,6 @@ class OpenRouterService:
             'identifier': identifier,
             'response': response
         }
-
-        print(str(llm_id) + " " + str(identifier))
-
         # OpenRouter Response extrahieren
         return response
     
@@ -53,5 +50,4 @@ class OpenRouterService:
         for entry in corpus)
         )
         results = utils.restructure(results)
-        print(results)
         return results
