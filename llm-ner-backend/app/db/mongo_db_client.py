@@ -8,7 +8,7 @@ class MongoDbClient:
 
     def __init__(self):
         self.client = MongoClient(self.connection_string)
-        self.database =  self.client.LLM_NER_SYSTEM_DATABASE
+        self.database =  self.client.LLM_NER_SYSTEM_DB
         self.usage_collection = self.database.Usages
         self.evaluation_collection = self.database.Evaluations
 

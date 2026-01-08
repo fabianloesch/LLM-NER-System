@@ -1,6 +1,7 @@
-from typing import List, Tuple
-from pydantic import BaseModel
+from typing import Tuple
+from pydantic import BaseModel, Field
 
+# Response 
 class Metrics(BaseModel):
     precision: float
     recall: float
@@ -10,9 +11,25 @@ class MetricLevels(BaseModel):
     overall: Metrics
     entityClassLevel: dict[str, Metrics]
 
-class EvaluationResponseDto(BaseModel):
-    result: dict[str, MetricLevels]
+class NerEvaluation(BaseModel):
+    id: str = Field(alias="_id")
+    created_datetime_utc: str
+    models: list[str]
+    evaluations: dict[str, MetricLevels]
 
+class EvaluationResponseDto(BaseModel):
+    result: NerEvaluation
+
+class NerEvaluationShort(BaseModel):
+    id: str = Field(alias="_id")
+    created_datetime_utc: str
+    models: list[str]
+
+class AllEvaluationsResponseDto(BaseModel):
+    result: list[NerEvaluationShort]
+
+
+# Request
 Entity = Tuple[int, int, str]
 
 class CorpusEntry(BaseModel):
