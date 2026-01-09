@@ -1,7 +1,5 @@
 <script setup></script>
 
 <template>
-    <router-view />
+  <div>NER Usage Editor</div>
 </template>
-
-<style scoped></style>

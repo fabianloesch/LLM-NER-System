@@ -1,7 +1,5 @@
 <script setup></script>
 
 <template>
-    <router-view />
+  <div>Usage History</div>
 </template>
-
-<style scoped></style>

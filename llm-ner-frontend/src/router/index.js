@@ -1,21 +1,47 @@
+import AppLayout from '@/layout/AppLayout.vue'
 import { createRouter, createWebHistory } from 'vue-router'
-import HomeView from '../views/HomeView.vue'
 
 const router = createRouter({
-  history: createWebHistory(import.meta.env.BASE_URL),
+  history: createWebHistory(),
   routes: [
     {
       path: '/',
-      name: 'home',
-      component: HomeView,
-    },
-    {
-      path: '/about',
-      name: 'about',
-      // route level code-splitting
-      // this generates a separate chunk (About.[hash].js) for this route
-      // which is lazy-loaded when the route is visited.
-      component: () => import('../views/AboutView.vue'),
+      component: AppLayout,
+      children: [
+        {
+          path: '/',
+          redirect: '/usage/new',
+        },
+        {
+          path: '/usage',
+          redirect: '/usage/new',
+        },
+        {
+          path: '/usage/new',
+          name: 'new-ner-run',
+          component: () => import('@/views/ner_usage/NerUsageEditor.vue'),
+        },
+        {
+          path: '/usage/history',
+          name: 'usage-history',
+          component: () => import('@/views/ner_usage/UsageHistory.vue'),
+        },
+        {
+          path: '/evaluation/new',
+          name: 'new-ner-evaluation',
+          component: () => import('@/views/ner_evaluation/NerEvaluationEditor.vue'),
+        },
+        {
+          path: '/evaluation/history',
+          name: 'evaluation-history',
+          component: () => import('@/views/ner_evaluation/EvaluationHistory.vue'),
+        },
+        {
+          path: '/documentation',
+          name: 'documentation',
+          component: () => import('@/views/misc/Documentation.vue'),
+        },
+      ],
     },
   ],
 })

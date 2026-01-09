@@ -1,7 +1,5 @@
 <script setup></script>
 
 <template>
-    <router-view />
+  <div>Usage Display</div>
 </template>
-
-<style scoped></style>

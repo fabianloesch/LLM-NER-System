@@ -1,7 +1,5 @@
 <script setup></script>
 
 <template>
-    <router-view />
+  <div>Evaluation Display</div>
 </template>
-
-<style scoped></style>
