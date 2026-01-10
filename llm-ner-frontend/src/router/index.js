@@ -22,6 +22,11 @@ const router = createRouter({
           component: () => import('@/views/ner_usage/NerUsageEditor.vue'),
         },
         {
+          path: '/usage/:usageId',
+          name: 'usage',
+          component: () => import('@/views/ner_usage/UsageDisplay.vue'),
+        },
+        {
           path: '/usage/history',
           name: 'usage-history',
           component: () => import('@/views/ner_usage/UsageHistory.vue'),
