@@ -49,10 +49,7 @@ onMounted(() => {
 
 // Get Model by Model Id
 const modelsStore = useModelsStore()
-const { availableModels } = storeToRefs(modelsStore)
-const modelName = computed(
-  () => availableModels.value.find((a) => a.id === modelRun.value.model)?.name ?? '',
-)
+const { getModelById } = storeToRefs(modelsStore)
 
 // Dynamische Farbpalette
 const colorPalette = [
@@ -144,7 +141,7 @@ const formatDate = (dateString) => {
     <div class="flex gap-8 mb-5">
       <span class="">
         <span class="mr-1">Modell:</span>
-        <span class="">{{ modelName }}</span>
+        <span class="">{{ getModelById(modelRun.model)?.name ?? modelRun.model }}</span>
       </span>
       <span class="">
         <span class="mr-1">Datum:</span>
