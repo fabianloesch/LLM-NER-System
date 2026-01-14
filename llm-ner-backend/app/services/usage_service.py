@@ -12,7 +12,7 @@ class UsageService:
         entities = (await self._openrouter.run_ner_model(text, entity_classes, llm_id))["response"]
         result = {
             "text": text,
-            "labels": entity_classes,
+            "entity_classes": entity_classes,
             "model": llm_id,
             "entities": entities
         }

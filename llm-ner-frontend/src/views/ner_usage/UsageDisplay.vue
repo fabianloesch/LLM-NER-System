@@ -13,7 +13,7 @@ const modelRun = ref({
   _id: '',
   created_datetime_utc: '',
   text: '',
-  labels: [],
+  entity_classes: [],
   model: '',
   entities: [],
 })
@@ -76,7 +76,7 @@ const colorPalette = [
 // Dynamisches Color Mapping basierend auf Labels
 const colorMap = computed(() => {
   const map = {}
-  modelRun.value.labels.forEach((label, index) => {
+  modelRun.value.entity_classes.forEach((label, index) => {
     map[label] = colorPalette[index % colorPalette.length]
   })
   return map
@@ -160,7 +160,7 @@ const formatDate = (dateString) => {
       <div class="text-xl mb-2">Entitätsklassen:</div>
       <div class="flex flex-wrap gap-3">
         <Chip
-          v-for="entityClass in modelRun.labels"
+          v-for="entityClass in modelRun.entity_classes"
           :key="entityClass"
           :label="entityClass"
           :style="{ backgroundColor: getLabelColor(entityClass) }"

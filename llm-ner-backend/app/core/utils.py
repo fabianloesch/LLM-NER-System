@@ -181,7 +181,7 @@ def get_distinct_entity_classes(entries):
                 if len(annotation) >= 3:
                     label = annotation[2]
                     entity_classes.add(label)
-    return entity_classes
+    return sorted(entity_classes)
 
 def inline_ner_to_json(text: str):
         pattern = re.compile(r"<(?P<label>\w+)>(?P<value>.*?)</\1>")

@@ -15,6 +15,7 @@ class NerEvaluation(BaseModel):
     id: str = Field(alias="_id")
     created_datetime_utc: str
     models: list[str]
+    entity_classes: list[str]
     evaluations: dict[str, MetricLevels]
 
 class EvaluationResponseDto(BaseModel):

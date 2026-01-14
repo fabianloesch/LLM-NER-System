@@ -12,7 +12,7 @@ class NerUsageRun(BaseModel):
     id: str = Field(alias="_id")
     created_datetime_utc: str
     text: str
-    labels: list[str]
+    entity_classes: list[str]
     model: str
     entities: list[Entity]
 

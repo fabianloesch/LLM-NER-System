@@ -1,7 +1,7 @@
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
-import { Chip, Tag, DataTable, Column } from 'primevue'
+import { Chip, Tag, DataTable, Column, MultiSelect } from 'primevue'
 import { useModelsStore } from '@/stores/models'
 import { storeToRefs } from 'pinia'
 import { transformEvaluationData } from '@/utils/format_evaluation_data'
@@ -14,11 +14,28 @@ const nerEvaluation = ref({
   _id: '',
   created_datetime_utc: '',
   models: [],
+  entity_classes: [],
   evaluations: {},
 })
 const isLoading = ref(false)
 const error = ref(null)
 const evaluationData = ref([])
+
+// Verfügbare KPIs
+const availableMetrics = ref([
+  {
+    id: 'precision',
+    name: 'Precision',
+  },
+  {
+    id: 'recall',
+    name: 'Recall',
+  },
+  {
+    id: 'f1_score',
+    name: 'F1-Score',
+  },
+])
 
 async function fetchNerEvaluation(evaluationId) {
   isLoading.value = true
@@ -33,6 +50,9 @@ async function fetchNerEvaluation(evaluationId) {
 
     const data = await response.json()
     nerEvaluation.value = data.result
+    selectedEntityClasses.value = [...data.result.entity_classes]
+    selectedModels.value = [...data.result.models]
+    selectedMetrics.value = [...availableMetrics]
   } catch (err) {
     console.error('Fehler beim Laden der Evaluation:', err)
     error.value = err.message
@@ -62,6 +82,7 @@ const formatDate = (dateString) => {
   })
 }
 
+// Transform Shape of Evaluation Data
 watch(
   () => nerEvaluation.value.evaluations,
   (newEvaluations) => {
@@ -71,6 +92,34 @@ watch(
   },
   { deep: true },
 )
+
+// Selected Entity Classes
+const selectedEntityClasses = ref([])
+// Alphabetisch sortierte Entity Classes für die Tabelle
+const sortedSelectedEntityClasses = computed(() => {
+  return [...selectedEntityClasses.value].sort()
+})
+
+// Selected Models
+const availableModels = computed(() =>
+  nerEvaluation.value.models.map((id) => ({
+    id,
+    name: getModelById.value(id)?.name ?? id,
+  })),
+)
+const selectedModels = ref([])
+
+// Selected Metrics
+const selectedMetrics = ref(availableMetrics.value)
+
+// Gefilterte Evaluation Daten
+const filteredEvaluationData = computed(() => {
+  return evaluationData.value.filter(
+    (item) =>
+      selectedModels.value.includes(item.model) &&
+      selectedMetrics.value.some((m) => m.id === item.metric),
+  )
+})
 </script>
 
 <template>
@@ -87,6 +136,7 @@ watch(
         <div class="flex gap-2">
           <Chip
             v-for="model in nerEvaluation.models"
+            :key="model"
             class=""
             :label="getModelById(model)?.name ?? model"
             :style="{ backgroundColor: 'var(--primary-color)', color: '#FFFFFF' }"
@@ -102,32 +152,80 @@ watch(
       </span>
     </div>
 
-    <div class="max-w-[800px]">
+    <!-- Filter -->
+    <div class="">
+      <!-- Models Filter -->
+      <MultiSelect
+        v-model="selectedModels"
+        :options="availableModels"
+        optionLabel="name"
+        optionValue="id"
+        showClear
+        placeholder="No Model selected"
+        size="medium"
+        :maxSelectedLabels="1"
+        :selectedItemsLabel="`${selectedModels.length} ${selectedModels.length === 1 ? 'Model' : 'Models'} selected`"
+      />
+
+      <!-- Metrics Filter -->
+      <MultiSelect
+        v-model="selectedMetrics"
+        :options="availableMetrics"
+        optionLabel="name"
+        showClear
+        placeholder="No KPI selected"
+        size="medium"
+        :maxSelectedLabels="3"
+        :selectedItemsLabel="`${selectedMetrics.length} ${selectedMetrics.length === 1 ? 'KPI' : 'KPIs'} selected`"
+      />
+
+      <!-- Entity Classes Filter -->
+      <MultiSelect
+        v-model="selectedEntityClasses"
+        :options="nerEvaluation.entity_classes"
+        showClear
+        placeholder="No Entity Label selected"
+        size="medium"
+        :maxSelectedLabels="3"
+        :selectedItemsLabel="`${selectedEntityClasses.length} ${selectedEntityClasses.length === 1 ? 'Label' : 'Labels'} selected`"
+      />
+    </div>
+
+    <div class="overflow-x-auto">
       <DataTable
-        :value="evaluationData"
+        :value="filteredEvaluationData"
         rowGroupMode="rowspan"
         groupRowsBy="model"
         sortMode="single"
         sortField="model"
-        tableStyle="min-width: 50rem"
+        tableStyle="width: auto; min-width: 600px;"
       >
-        <Column field="model" header="Model" style="max-width: 60px">
+        <Column field="model" header="Model" style="width: 200px">
           <template #body="{ data }">
             {{ getModelById(data.model)?.name ?? data.model }}
           </template>
         </Column>
-        <Column field="metric" header="Metric"></Column>
-        <Column field="overall" header="Overall"></Column>
+        <Column field="metric" header="Metric" style="width: 120px">
+          <template #body="{ data }">
+            {{ availableMetrics.find((m) => m.id === data.metric)?.name ?? data.metric }}
+          </template>
+        </Column>
+        <Column field="overall" header="Overall" style="width: 100px"></Column>
+        <Column
+          v-for="entityClass in sortedSelectedEntityClasses"
+          :key="entityClass"
+          :field="entityClass"
+          :header="entityClass"
+          style="width: 120px; min-width: 100px"
+        ></Column>
       </DataTable>
     </div>
   </div>
-
-  {{ evaluationData }}
 </template>
 
 <style scoped>
 :deep(.p-datatable-thead > tr > th) {
-  background-color: transparent !important;
+  background-color: transparent;
   color: var(--text-color);
 }
 </style>

@@ -24,6 +24,7 @@ class EvaluationService:
             result[llm_id] = llm_eval_result
         result = {
             "models": llm_ids,
+            "entity_classes": entity_classes,
             "evaluations": result
             }
         self._mongo_db_client.insert_one(
