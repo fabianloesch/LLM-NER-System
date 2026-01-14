@@ -4,10 +4,16 @@ import { useRoute } from 'vue-router'
 import { Chip, Tag, DataTable, Column, MultiSelect } from 'primevue'
 import { useModelsStore } from '@/stores/models'
 import { storeToRefs } from 'pinia'
-import { transformEvaluationData } from '@/utils/format_evaluation_data'
+import { transformEvaluationData, metrics } from '@/utils/format_evaluation_data'
+import { formatDate } from '@/utils/misc_utils'
 
 const route = useRoute()
 const evaluationId = computed(() => route.params.evaluationId)
+onMounted(() => {
+  if (evaluationId.value) {
+    fetchNerEvaluation(evaluationId.value)
+  }
+})
 
 // Get NER Model Run
 const nerEvaluation = ref({
@@ -20,22 +26,6 @@ const nerEvaluation = ref({
 const isLoading = ref(false)
 const error = ref(null)
 const evaluationData = ref([])
-
-// Verfügbare KPIs
-const availableMetrics = ref([
-  {
-    id: 'precision',
-    name: 'Precision',
-  },
-  {
-    id: 'recall',
-    name: 'Recall',
-  },
-  {
-    id: 'f1_score',
-    name: 'F1-Score',
-  },
-])
 
 async function fetchNerEvaluation(evaluationId) {
   isLoading.value = true
@@ -50,9 +40,9 @@ async function fetchNerEvaluation(evaluationId) {
 
     const data = await response.json()
     nerEvaluation.value = data.result
-    selectedEntityClasses.value = [...data.result.entity_classes]
+    selectedEntityClasses.value = [...data.result.entity_classes, 'Overall']
     selectedModels.value = [...data.result.models]
-    selectedMetrics.value = [...availableMetrics]
+    selectedMetrics.value = [...availableMetrics.value]
   } catch (err) {
     console.error('Fehler beim Laden der Evaluation:', err)
     error.value = err.message
@@ -61,26 +51,49 @@ async function fetchNerEvaluation(evaluationId) {
   }
 }
 
-onMounted(() => {
-  if (evaluationId.value) {
-    fetchNerEvaluation(evaluationId.value)
-  }
+// Entity Classes
+const availableEntityClasses = computed(() => {
+  return [...nerEvaluation.value.entity_classes, 'Overall'].sort((a, b) => {
+    // 'Overall' immer an erster Stelle
+    if (a === 'Overall') return -1
+    if (b === 'Overall') return 1
+    // Sonst alphabetisch sortieren
+    return a.localeCompare(b)
+  })
+})
+const selectedEntityClasses = ref([])
+const sortedSelectedEntityClasses = computed(() => {
+  return [...selectedEntityClasses.value].sort((a, b) => {
+    // 'Overall' immer an erster Stelle
+    if (a === 'Overall') return -1
+    if (b === 'Overall') return 1
+    // Sonst alphabetisch sortieren
+    return a.localeCompare(b)
+  })
 })
 
-// Get Model by Model Id
-const modelsStore = useModelsStore()
-const { getModelById } = storeToRefs(modelsStore)
+// Models
+const { getModelById } = storeToRefs(useModelsStore())
+const availableModels = computed(() =>
+  nerEvaluation.value.models.map((id) => ({
+    id,
+    name: getModelById.value(id)?.name ?? id,
+  })),
+)
+const selectedModels = ref([])
 
-const formatDate = (dateString) => {
-  const date = new Date(dateString)
-  return date.toLocaleString('de-DE', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  })
-}
+// Metrics
+const availableMetrics = ref(metrics)
+const selectedMetrics = ref(availableMetrics.value)
+
+// Data
+const filteredEvaluationData = computed(() => {
+  return evaluationData.value.filter(
+    (item) =>
+      selectedModels.value.includes(item.model) &&
+      selectedMetrics.value.some((m) => m.id === item.metric),
+  )
+})
 
 // Transform Shape of Evaluation Data
 watch(
@@ -93,33 +106,37 @@ watch(
   { deep: true },
 )
 
-// Selected Entity Classes
-const selectedEntityClasses = ref([])
-// Alphabetisch sortierte Entity Classes für die Tabelle
-const sortedSelectedEntityClasses = computed(() => {
-  return [...selectedEntityClasses.value].sort()
+// Berechne für jede Metrik und Spalte den höchsten Wert
+const maxValues = computed(() => {
+  const maxes = {}
+
+  // Für jede Metrik
+  selectedMetrics.value.forEach((metric) => {
+    maxes[metric.id] = {}
+
+    // Höchster Wert für jede Entity Class
+    sortedSelectedEntityClasses.value.forEach((entityClass) => {
+      const values = filteredEvaluationData.value
+        .filter((item) => item.metric === metric.id)
+        .map((item) => parseFloat(item[entityClass]))
+        .filter((val) => !isNaN(val))
+
+      if (values.length > 0) {
+        maxes[metric.id][entityClass] = Math.max(...values)
+      }
+    })
+  })
+
+  return maxes
 })
 
-// Selected Models
-const availableModels = computed(() =>
-  nerEvaluation.value.models.map((id) => ({
-    id,
-    name: getModelById.value(id)?.name ?? id,
-  })),
-)
-const selectedModels = ref([])
+// Prüfe ob ein Wert der höchste ist
+const isMaxValue = (metricId, column, value) => {
+  const parsedValue = parseFloat(value)
+  if (isNaN(parsedValue)) return false
 
-// Selected Metrics
-const selectedMetrics = ref(availableMetrics.value)
-
-// Gefilterte Evaluation Daten
-const filteredEvaluationData = computed(() => {
-  return evaluationData.value.filter(
-    (item) =>
-      selectedModels.value.includes(item.model) &&
-      selectedMetrics.value.some((m) => m.id === item.metric),
-  )
-})
+  return maxValues.value[metricId]?.[column] === parsedValue
+}
 </script>
 
 <template>
@@ -127,7 +144,7 @@ const filteredEvaluationData = computed(() => {
     <h2 class="font-semibold text-2xl mb-5">NER Evaluation Display</h2>
 
     <!-- Metadaten -->
-    <div class="mb-5">
+    <div class="mb-6">
       <div class="flex items-center mb-3">
         <Tag severity="secondary" class="mr-2">
           <i class="pi pi-microchip-ai mr-1"></i>
@@ -153,7 +170,7 @@ const filteredEvaluationData = computed(() => {
     </div>
 
     <!-- Filter -->
-    <div class="">
+    <div class="flex flex-wrap gap-3 mb-5">
       <!-- Models Filter -->
       <MultiSelect
         v-model="selectedModels"
@@ -164,6 +181,7 @@ const filteredEvaluationData = computed(() => {
         placeholder="No Model selected"
         size="medium"
         :maxSelectedLabels="1"
+        class="w-80"
         :selectedItemsLabel="`${selectedModels.length} ${selectedModels.length === 1 ? 'Model' : 'Models'} selected`"
       />
 
@@ -176,22 +194,24 @@ const filteredEvaluationData = computed(() => {
         placeholder="No KPI selected"
         size="medium"
         :maxSelectedLabels="3"
+        class="w-80"
         :selectedItemsLabel="`${selectedMetrics.length} ${selectedMetrics.length === 1 ? 'KPI' : 'KPIs'} selected`"
       />
 
       <!-- Entity Classes Filter -->
       <MultiSelect
         v-model="selectedEntityClasses"
-        :options="nerEvaluation.entity_classes"
+        :options="availableEntityClasses"
         showClear
         placeholder="No Entity Label selected"
         size="medium"
         :maxSelectedLabels="3"
+        class="w-80"
         :selectedItemsLabel="`${selectedEntityClasses.length} ${selectedEntityClasses.length === 1 ? 'Label' : 'Labels'} selected`"
       />
     </div>
 
-    <div class="overflow-x-auto">
+    <div>
       <DataTable
         :value="filteredEvaluationData"
         rowGroupMode="rowspan"
@@ -210,14 +230,19 @@ const filteredEvaluationData = computed(() => {
             {{ availableMetrics.find((m) => m.id === data.metric)?.name ?? data.metric }}
           </template>
         </Column>
-        <Column field="overall" header="Overall" style="width: 100px"></Column>
         <Column
           v-for="entityClass in sortedSelectedEntityClasses"
           :key="entityClass"
           :field="entityClass"
           :header="entityClass"
           style="width: 120px; min-width: 100px"
-        ></Column>
+        >
+          <template #body="{ data }">
+            <span :class="{ 'font-bold': isMaxValue(data.metric, entityClass, data[entityClass]) }">
+              {{ data[entityClass] }}
+            </span>
+          </template>
+        </Column>
       </DataTable>
     </div>
   </div>

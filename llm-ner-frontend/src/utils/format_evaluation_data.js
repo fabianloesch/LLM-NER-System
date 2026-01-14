@@ -11,7 +11,7 @@ export function transformEvaluationData(metricsData) {
       const row = {
         model: modelName,
         metric: metric,
-        overall: modelData.overall[metric],
+        Overall: modelData.overall[metric],
       }
 
       // Add all entity class values
@@ -27,3 +27,18 @@ export function transformEvaluationData(metricsData) {
 
   return result
 }
+
+export const metrics = [
+  {
+    id: 'precision',
+    name: 'Precision',
+  },
+  {
+    id: 'recall',
+    name: 'Recall',
+  },
+  {
+    id: 'f1_score',
+    name: 'F1-Score',
+  },
+]
