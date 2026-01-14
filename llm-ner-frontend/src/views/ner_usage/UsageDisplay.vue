@@ -1,7 +1,7 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
-import { Chip } from 'primevue'
+import { Chip, Tag } from 'primevue'
 import { useModelsStore } from '@/stores/models'
 import { storeToRefs } from 'pinia'
 
@@ -139,12 +139,18 @@ const formatDate = (dateString) => {
 
     <!-- Metadaten -->
     <div class="flex gap-8 mb-5">
-      <span class="">
-        <span class="mr-1">Modell:</span>
+      <span class="flex items-center">
+        <Tag severity="secondary" class="mr-1">
+          <i class="pi pi-microchip-ai mr-1"></i>
+          <span class="">Modell</span>
+        </Tag>
         <span class="">{{ getModelById(modelRun.model)?.name ?? modelRun.model }}</span>
       </span>
-      <span class="">
-        <span class="mr-1">Datum:</span>
+      <span class="flex items-center">
+        <Tag severity="secondary" class="mr-1">
+          <i class="pi pi-calendar-clock mr-1"></i>
+          <span class="">Erstellungsdatum</span>
+        </Tag>
         <span class="">{{ formatDate(modelRun.created_datetime_utc) }}</span>
       </span>
     </div>
