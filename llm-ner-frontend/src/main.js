@@ -6,6 +6,7 @@ import Aura from '@primeuix/themes/aura'
 import PrimeVue from 'primevue/config'
 import ConfirmationService from 'primevue/confirmationservice'
 import ToastService from 'primevue/toastservice'
+import { StyleClass } from 'primevue'
 
 import { createPinia } from 'pinia'
 
@@ -26,5 +27,6 @@ app.use(PrimeVue, {
 })
 app.use(ToastService)
 app.use(ConfirmationService)
+app.directive('styleclass', StyleClass)
 
 app.mount('#app')

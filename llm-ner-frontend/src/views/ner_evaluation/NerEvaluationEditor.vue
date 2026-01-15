@@ -5,6 +5,8 @@ import { useModelsStore } from '@/stores/models'
 import { storeToRefs } from 'pinia'
 import router from '@/router'
 import { validateCorpus } from '@/utils/json_validation'
+import { useToast } from 'primevue/usetoast'
+const toast = useToast()
 
 const modelsStore = useModelsStore()
 
@@ -103,7 +105,8 @@ function validateInput() {
   validationSuccess.value = false
 
   if (!inputCorpus.value || inputCorpus.value.trim() === '') {
-    validationErrors.value = ['Bitte geben Sie einen Input-Corpus ein']
+    validationErrors.value = ['Bitte geben Sie einen Input-Corpus ein.']
+    showError(validationErrors.value.join(' '))
     return false
   }
 
@@ -111,6 +114,9 @@ function validateInput() {
 
   if (validationErrors.value.length === 0) {
     validationSuccess.value = true
+    showSuccess('Validierung erfolgreich! Der Input-Corpus entspricht dem erwarteten Schema.')
+  } else {
+    showError(validationErrors.value.join(' '))
   }
 
   return validationErrors.value.length === 0
@@ -176,6 +182,27 @@ async function submit() {
     })
   }
 }
+
+function showSuccess(details) {
+  toast.add({
+    severity: 'success',
+    summary: 'Success Message',
+    detail: details,
+    life: 5000,
+  })
+}
+
+function showInfo() {
+  toast.add({ severity: 'info', summary: 'Info Message', detail: 'Message Detail', life: 5000 })
+}
+
+function showWarn() {
+  toast.add({ severity: 'warn', summary: 'Warn Message', detail: 'Message Detail', life: 5000 })
+}
+
+function showError(details) {
+  toast.add({ severity: 'error', summary: 'Error Message', detail: details, life: 5000 })
+}
 </script>
 
 <template>
@@ -203,7 +230,7 @@ async function submit() {
         :selectedItemsLabel="`${selectedModels.length} ${selectedModels.length === 1 ? 'Model' : 'Models'} selected`"
         :selectionLimit="3"
       />
-      <div>
+      <div class="flex gap-2 mt-2">
         <Chip
           v-for="model in selectedModels"
           :key="model"
@@ -219,25 +246,6 @@ async function submit() {
 
     <div class="mb-5">
       <div class="font-semibold text-xl mb-2">Corpus</div>
-      <!-- Validation Success -->
-      <div v-if="validationSuccess && validationErrors.length === 0" class="mb-5">
-        <Message severity="success" :closable="true" @close="validationSuccess = false">
-          Validierung erfolgreich! Der Input-Corpus entspricht dem erwarteten Schema.
-        </Message>
-      </div>
-
-      <!-- Validation Errors -->
-      <div v-if="validationErrors.length > 0" class="mb-5">
-        <Message
-          v-for="(err, index) in validationErrors"
-          :key="index"
-          severity="error"
-          :closable="false"
-        >
-          {{ err }}
-        </Message>
-      </div>
-
       <FloatLabel variant="on">
         <Textarea
           id="on_label"
@@ -245,32 +253,33 @@ async function submit() {
           rows="12"
           cols="120"
           :class="{ 'p-invalid': !isValid && inputCorpus }"
-          @blur="validateInput"
           @input="validationSuccess = false"
         />
         <label for="on_label">Enter JSON Corpus</label>
       </FloatLabel>
-      <small class="text-gray-500 mt-2 block">
-        Format: [{"id": 1, "text": "...", "label": [[start, end, "type"], ...]}]
-      </small>
+      <div class="flex items-center">
+        <Button
+          label="Validieren"
+          icon="pi pi-check"
+          iconPos="left"
+          severity="secondary"
+          @click="validateInput"
+          class="mr-2"
+        />
+        <small class="text-gray-500 block">
+          Format: [{"id": 1, "text": "...", "label": [[start, end, "type"], ...]}]
+        </small>
+      </div>
     </div>
 
-    <div>
-      <Button
-        label="Validieren"
-        icon="pi pi-check"
-        iconPos="left"
-        severity="secondary"
-        @click="validateInput"
-        class="mr-2"
-      />
+    <div class="mt-6">
       <Button
         label="Start NER"
         icon="pi pi-play-circle"
         iconPos="left"
         :loading="isLoading"
         :disabled="!isValid || selectedModels.length === 0"
-        @click="submit()"
+        @click="submit"
       />
     </div>
   </div>
