@@ -1,11 +1,14 @@
 <script setup>
 import { Select, FloatLabel, Textarea, Chip, InputGroup, Button, InputText } from 'primevue'
-import { ref } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { useModelsStore } from '@/stores/models'
 import { storeToRefs } from 'pinia'
 import router from '@/router'
+import { useRoute } from 'vue-router'
 
 const modelsStore = useModelsStore()
+const route = useRoute()
+const usageId = computed(() => route.params.usageId)
 
 // Select Model
 const { availableModels } = storeToRefs(modelsStore)
@@ -81,6 +84,38 @@ async function submit() {
     params: { usageId: nerResult.value._id },
   })
 }
+
+const templateModelRun = ref({})
+
+async function fetchNerRun(modelRunId) {
+  isLoading.value = true
+  error.value = null
+
+  try {
+    const response = await fetch(`http://127.0.0.1:8000/api/modelRun/${modelRunId}`)
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`)
+    }
+
+    const data = await response.json()
+    templateModelRun.value = data.result
+    inputText.value = data.result.text
+    selectedModel.value = data.result.model
+    entityclasses.value = data.result.entity_classes
+  } catch (err) {
+    console.error('Fehler beim Laden des Modeldurchlaufs:', err)
+    error.value = err.message
+  } finally {
+    isLoading.value = false
+  }
+}
+
+onMounted(() => {
+  if (usageId.value) {
+    fetchNerRun(usageId.value)
+  }
+})
 </script>
 
 <template>

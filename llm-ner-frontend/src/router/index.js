@@ -17,7 +17,7 @@ const router = createRouter({
           redirect: '/usage/new',
         },
         {
-          path: '/usage/new',
+          path: '/usage/new/:usageId?',
           name: 'new-ner-run',
           component: () => import('@/views/ner_usage/NerUsageEditor.vue'),
         },

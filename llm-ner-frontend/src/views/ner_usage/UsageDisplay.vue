@@ -1,9 +1,10 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
-import { Chip, Tag } from 'primevue'
+import { Chip, Tag, Button } from 'primevue'
 import { useModelsStore } from '@/stores/models'
 import { storeToRefs } from 'pinia'
+import router from '@/router'
 
 const route = useRoute()
 const usageId = computed(() => route.params.usageId)
@@ -131,6 +132,13 @@ const formatDate = (dateString) => {
     minute: '2-digit',
   })
 }
+
+const restart = () => {
+  router.push({
+    name: 'new-ner-run',
+    params: { usageId: usageId.value },
+  })
+}
 </script>
 
 <template>
@@ -184,7 +192,7 @@ const formatDate = (dateString) => {
     </div>
 
     <!-- Entitäten Liste -->
-    <div class="">
+    <div class="mb-5">
       <div class="text-xl mb-2">Erkannte Entitäten ({{ modelRun.entities.length }}):</div>
       <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
         <div
@@ -200,6 +208,11 @@ const formatDate = (dateString) => {
           <div class="text-xs">Position: {{ entity.start }} - {{ entity.end }}</div>
         </div>
       </div>
+    </div>
+
+    <!-- Restart Button -->
+    <div>
+      <Button label="Restart" icon="pi pi-refresh" iconPos="left" @click="restart" />
     </div>
   </div>
 </template>
