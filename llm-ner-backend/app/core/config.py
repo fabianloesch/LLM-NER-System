@@ -1,5 +1,6 @@
 from dotenv import load_dotenv
 from pydantic_settings import BaseSettings
+from pydantic import ConfigDict
 
 load_dotenv()
 
@@ -13,7 +14,6 @@ class Config(BaseSettings):
     MONGO_DB_CONNECTION_STRING: str = ""
 
 
-    class Config:
-        env_file = ".env"
+    model_config = ConfigDict(env_file=".env")
 
 config = Config()
