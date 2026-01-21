@@ -32,7 +32,7 @@ const router = createRouter({
           component: () => import('@/views/ner_usage/UsageHistory.vue'),
         },
         {
-          path: '/evaluation/new',
+          path: '/evaluation/new/:evaluationId?',
           name: 'new-ner-evaluation',
           component: () => import('@/views/ner_evaluation/NerEvaluationEditor.vue'),
         },

@@ -25,7 +25,8 @@ class EvaluationService:
         result = {
             "models": llm_ids,
             "entity_classes": entity_classes,
-            "evaluations": result
+            "evaluations": result,
+            "corpus": corpus
             }
         self._mongo_db_client.insert_one(
             self._mongo_db_client.evaluation_collection,

@@ -1,11 +1,12 @@
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
-import { Chip, Tag, DataTable, Column, MultiSelect } from 'primevue'
+import { Chip, Tag, DataTable, Column, MultiSelect, Button } from 'primevue'
 import { useModelsStore } from '@/stores/models'
 import { storeToRefs } from 'pinia'
 import { transformEvaluationData, metrics } from '@/utils/format_evaluation_data'
 import { formatDate } from '@/utils/misc_utils'
+import router from '@/router'
 
 const route = useRoute()
 const evaluationId = computed(() => route.params.evaluationId)
@@ -137,6 +138,13 @@ const isMaxValue = (metricId, column, value) => {
 
   return maxValues.value[metricId]?.[column] === parsedValue
 }
+
+const restart = () => {
+  router.push({
+    name: 'new-ner-evaluation',
+    params: { evaluationId: evaluationId.value },
+  })
+}
 </script>
 
 <template>
@@ -211,7 +219,7 @@ const isMaxValue = (metricId, column, value) => {
       />
     </div>
 
-    <div>
+    <div class="mb-5">
       <DataTable
         :value="filteredEvaluationData"
         rowGroupMode="rowspan"
@@ -244,6 +252,11 @@ const isMaxValue = (metricId, column, value) => {
           </template>
         </Column>
       </DataTable>
+    </div>
+
+    <!-- Restart Button -->
+    <div>
+      <Button label="Restart" icon="pi pi-refresh" iconPos="left" @click="restart" />
     </div>
   </div>
 </template>
