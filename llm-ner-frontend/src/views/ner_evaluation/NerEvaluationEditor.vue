@@ -147,7 +147,7 @@ async function fetchNerEvaluation(evaluationId) {
 
     const data = await response.json()
     selectedModels.value = [...data.result.models]
-    inputCorpus.value = JSON.stringify(data.result.corpus)
+    inputCorpus.value = JSON.stringify(data.result.corpus, null, 2)
   } catch (err) {
     console.error('Fehler beim Laden der Evaluation:', err)
     error.value = err.message
