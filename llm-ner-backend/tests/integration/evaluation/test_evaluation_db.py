@@ -1,4 +1,5 @@
 from bson import ObjectId
+import copy
 
 # ============================================================================
 # INTEGRATION TESTS - DATABASE OPERATIONS
@@ -7,26 +8,24 @@ from bson import ObjectId
 class TestMongoDbClientIntegration:
     """Tests for MongoDB Operations"""
     
-    def test_insert_one_adds_timestamp(self, test_db_client):
-        document = {"test_field": "test_value"}
-        
+    def test_insert_one_adds_timestamp(self, test_db_client, sample_evaluation_db_entry):
         result = test_db_client.insert_one(
-            test_db_client.usage_collection,
-            document
+            test_db_client.evaluation_collection,
+            sample_evaluation_db_entry
         )
         
         assert "created_datetime_utc" in result
         assert "_id" in result
         assert isinstance(result["_id"], str)
     
-    def test_get_one_converts_objectid(self, test_db_client):
+    def test_get_one_converts_objectid(self, test_db_client, sample_evaluation_db_entry):
         inserted = test_db_client.insert_one(
-            test_db_client.usage_collection,
-            {"test": "data"}
+            test_db_client.evaluation_collection,
+            sample_evaluation_db_entry
         )
         
         result = test_db_client.get_one(
-            test_db_client.usage_collection,
+            test_db_client.evaluation_collection,
             {"_id": ObjectId(inserted["_id"])}
         )
         
@@ -34,48 +33,48 @@ class TestMongoDbClientIntegration:
     
     def test_get_one_returns_none_if_not_found(self, test_db_client):
         result = test_db_client.get_one(
-            test_db_client.usage_collection,
+            test_db_client.evaluation_collection,
             {"_id": ObjectId()}
         )
         
         assert result is None
     
-    def test_get_many_with_projection(self, test_db_client):
+    def test_get_many_with_projection(self, test_db_client, sample_evaluation_db_entry):
         for i in range(3):
             test_db_client.insert_one(
-                test_db_client.usage_collection,
-                {"field1": f"value{i}", "field2": f"other{i}"}
+                test_db_client.evaluation_collection,
+                copy.deepcopy(sample_evaluation_db_entry)
             )
         
         result = test_db_client.get_many(
-            test_db_client.usage_collection,
-            projection={"field1": 1}
+            test_db_client.evaluation_collection,
+            projection={"models": 1}
         )
         
         assert len(result) == 3
         for doc in result:
-            assert "field1" in doc
+            assert "models" in doc
             assert "_id" in doc
-            assert "field2" not in doc
+            assert "evaluations" not in doc
     
     def test_get_many_empty_collection(self, test_db_client):
-        result = test_db_client.get_many(test_db_client.usage_collection)
+        result = test_db_client.get_many(test_db_client.evaluation_collection)
         assert result == []
     
-    def test_multiple_inserts_and_retrieval(self, test_db_client):
+    def test_multiple_inserts_and_retrieval(self, test_db_client, sample_evaluation_db_entry):
         inserted_ids = []
         for i in range(5):
             doc = test_db_client.insert_one(
-                test_db_client.usage_collection,
-                {"index": i, "data": f"test-{i}"}
+                test_db_client.evaluation_collection,
+                copy.deepcopy(sample_evaluation_db_entry)
             )
             inserted_ids.append(doc["_id"])
         
-        all_docs = test_db_client.get_many(test_db_client.usage_collection)
+        all_docs = test_db_client.get_many(test_db_client.evaluation_collection)
         assert len(all_docs) == 5
         
         specific_doc = test_db_client.get_one(
-            test_db_client.usage_collection,
+            test_db_client.evaluation_collection,
             {"_id": ObjectId(inserted_ids[2])}
         )
-        assert specific_doc["index"] == 2
+        assert specific_doc["_id"] == inserted_ids[2]
