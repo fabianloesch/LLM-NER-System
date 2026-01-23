@@ -1,0 +1,110 @@
+version: "3.8"
+
+services:
+  mongodb:
+    image: mongo:7
+    container_name: mongodb
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: password
+    ports:
+      - "27018:27017"
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - app-network
+
+  # ---------- PROD ----------
+  backend:
+    build:
+      context: ./llm-ner-backend
+      dockerfile: Dockerfile
+      target: production
+    container_name: fastapi-backend
+    restart: unless-stopped
+    env_file:
+      - ./llm-ner-backend/.env
+    ports:
+      - "8000:8000"
+    depends_on:
+      - mongodb
+    networks:
+      - app-network
+    profiles: ["prod"]
+
+  frontend:
+    build:
+      context: ./llm-ner-frontend
+      dockerfile: Dockerfile
+    container_name: vue-frontend
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    networks:
+      - app-network
+    profiles: ["prod"]
+
+  # ---------- DEV (Hot Reload) ----------
+  backend-dev:
+    build:
+      context: ./llm-ner-backend
+      dockerfile: Dockerfile
+      target: base
+    container_name: fastapi-backend-dev
+    env_file:
+      - ./llm-ner-backend/.env
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload --reload-dir /app/app
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./llm-ner-backend:/app
+    environment:
+      - WATCHFILES_FORCE_POLLING=true
+      - WATCHFILES_POLLING_INTERVAL=0.1
+    depends_on:
+      - mongodb
+    networks:
+      - app-network
+    profiles: ["dev"]
+
+  frontend-dev:
+    image: node:20
+    container_name: vue-frontend-dev
+    working_dir: /app
+    command: sh -c "npm install && npm run dev -- --host 0.0.0.0 --port 5173"
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./llm-ner-frontend:/app
+    environment:
+      - CHOKIDAR_USEPOLLING=true
+      - CHOKIDAR_INTERVAL=100
+    depends_on:
+      - backend-dev
+    networks:
+      - app-network
+    profiles: ["dev"]
+
+  # ---------- TEST ----------
+  backend-tests:
+    build:
+      context: ./llm-ner-backend
+      dockerfile: Dockerfile
+      target: test
+    env_file:
+      - ./llm-ner-backend/.env
+    depends_on:
+      - mongodb
+    networks:
+      - app-network
+    profiles: ["test"]
+
+volumes:
+  mongodb_data:
+
+networks:
+  app-network:
+    driver: bridge

@@ -2,9 +2,9 @@
 Gemeinsame Test-Fixtures für alle Tests
 """
 import pytest
-from testcontainers.mongodb import MongoDbContainer
 from pymongo import MongoClient
 from unittest.mock import AsyncMock
+import os
 
 from app.db.mongo_db_client import MongoDbClient
 from app.openrouter.openrouter_service import OpenRouterService
@@ -15,14 +15,11 @@ from app.openrouter.openrouter_service import OpenRouterService
 # ============================================================================
 
 @pytest.fixture(scope="session")
-def mongo_container():
-    with MongoDbContainer("mongo:7.0") as container:
-        yield container
-
-
-@pytest.fixture(scope="session")
-def test_mongo_client(mongo_container):
-    connection_url = mongo_container.get_connection_url()
+def test_mongo_client():
+    connection_url = os.getenv(
+        "MONGO_DB_CONNECTION_STRING",
+        "mongodb://admin:password@mongodb:27017/test_db?authSource=admin"
+    )
     client = MongoClient(connection_url)
     yield client
     client.close()

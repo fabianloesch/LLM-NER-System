@@ -1,0 +1,36 @@
+# Git
+.git
+.gitignore
+
+# Dependencies (werden neu installiert)
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Build (wird neu gebaut)
+dist/
+.cache/
+
+# Tests
+tests/
+coverage/
+.nyc_output/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# Docker
+Dockerfile
+docker-compose.yml
+.dockerignore
+
+# Environment
+.env
+.env.*
+
+# OS
+.DS_Store
+Thumbs.db
