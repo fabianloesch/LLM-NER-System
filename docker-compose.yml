@@ -98,6 +98,9 @@ services:
       - mongodb
     networks:
       - app-network
+    volumes:
+      - ./llm-ner-backend:/app
+    command: pytest -v
     profiles: ["test"]
 
 volumes:
