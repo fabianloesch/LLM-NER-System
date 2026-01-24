@@ -155,7 +155,7 @@ class EvaluationService:
 
     # Evaluation Metrics (precision, recall, f1-score)
     @staticmethod
-    def compute_precision(correct:int, fuzzy_correct:int, false_positive:int, strict:bool) -> float:
+    def compute_precision(correct:int, fuzzy_correct:int, false_positive:int, strict:bool = False) -> float:
         if (strict):
             false_positive += fuzzy_correct
         else:
@@ -166,7 +166,7 @@ class EvaluationService:
         else: return 0
 
     @staticmethod
-    def compute_recall(correct:int, fuzzy_correct:int, false_negative:int, strict:bool) -> float:
+    def compute_recall(correct:int, fuzzy_correct:int, false_negative:int, strict:bool = False) -> float:
         if (strict):
             false_negative += fuzzy_correct
         else:
@@ -201,8 +201,8 @@ class EvaluationService:
             for metric, value in metrics.items():
                 agg_base_metrics[metric] += value
 
-        overall_precision = EvaluationService.compute_precision(agg_base_metrics["correct"], agg_base_metrics["fuzzy_correct"], agg_base_metrics["false_positive"], False)
-        overall_recall = EvaluationService.compute_precision(agg_base_metrics["correct"], agg_base_metrics["fuzzy_correct"], agg_base_metrics["false_negative"], False)
+        overall_precision = EvaluationService.compute_precision(agg_base_metrics["correct"], agg_base_metrics["fuzzy_correct"], agg_base_metrics["false_positive"])
+        overall_recall = EvaluationService.compute_precision(agg_base_metrics["correct"], agg_base_metrics["fuzzy_correct"], agg_base_metrics["false_negative"])
         overall_f1_score = EvaluationService.compute_f1_score(overall_precision, overall_recall)
 
         result["overall"] = {
