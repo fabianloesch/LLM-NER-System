@@ -175,4 +175,54 @@ class TestComputeEvalMetrics:
 
             result = EvaluationService.compute_eval_metrics(base_metrics)
             self.assert_dict(result, expected)
+
+    def test_false_negativ(self):
+        base_metrics = {
+            'Form': {
+                'correct': 50,
+                'fuzzy_correct': 0,
+                'false_negative': 0,
+                'false_positive': 0
+                },
+            'Frequency': {
+                'correct': 25,
+                'fuzzy_correct': 0,
+                'false_negative': 0,
+                'false_positive': 0
+                },
+            'Drug': {
+                'correct': 20,
+                'fuzzy_correct': 0,
+                'false_negative': 5,
+                'false_positive': 0
+                }
+        }
+        
+        expected = {
+            'overall': {
+                'precision': 1, 
+                'recall': 0.95, 
+                'f1_score': 0.9744
+            },
+            'entityClassLevel': {
+                'Drug': {
+                    'precision': 1,
+                    'recall': 0.8,
+                    'f1_score': 0.8889
+                },
+                'Form': {
+                    'precision': 1, 
+                    'recall': 1.0, 
+                    'f1_score': 1.0
+                },
+                'Frequency': {
+                    'precision': 1,
+                    'recall': 1.0, 
+                    'f1_score': 1.0
+                },
+            }
+        }
+
+        result = EvaluationService.compute_eval_metrics(base_metrics)
+        self.assert_dict(result, expected)
         
