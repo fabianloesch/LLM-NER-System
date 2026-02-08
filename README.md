@@ -56,3 +56,7 @@ cd LLM-NER-System
 ## ⚠️ Important Note
 
 To take full advantage of the application, it is necessary to top up your OpenRouter account with a small amount of credits ($5 is more than enough). This allows you to use paid models, which are significantly more powerful. However, it is also possible to use only the free models. Unfortunately, it is not possible to apply the evaluation function to free models, as these are subject to a certain rate limit and the evaluation exceeds this limit.
+
+---
+
+This project is licensed under the MIT License - see the LICENSE file for details
