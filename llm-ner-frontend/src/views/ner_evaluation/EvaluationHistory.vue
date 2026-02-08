@@ -81,7 +81,7 @@ function routeToEvaluationDetails(evaluation) {
 
 <template>
   <div class="card">
-    <div class="font-semibold text-2xl mb-5">Usage History</div>
+    <div class="font-semibold text-2xl mb-5">Evaluation History</div>
     <div v-for="group in groupedEvaluationsByDate" :key="group.date" class="max-w-[800px] mb-6">
       <DataTable
         :value="group.items"

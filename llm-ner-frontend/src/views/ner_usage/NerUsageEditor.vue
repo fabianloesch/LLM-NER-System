@@ -120,7 +120,7 @@ onMounted(() => {
 
 <template>
   <div class="card">
-    <div class="font-semibold text-2xl mb-5">NER Usage Editor</div>
+    <div class="font-semibold text-2xl mb-5">NER Task Editor</div>
     <div class="mb-5">
       <div class="font-semibold text-xl mb-2">Model</div>
       <Select
