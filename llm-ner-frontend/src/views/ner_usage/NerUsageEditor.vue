@@ -1,34 +1,22 @@
 <script setup>
-import { Select, FloatLabel, Textarea, Chip, InputGroup, Button, InputText } from 'primevue'
+import { Button } from 'primevue'
 import { ref, onMounted, computed } from 'vue'
-import { useModelsStore } from '@/stores/models'
-import { storeToRefs } from 'pinia'
 import router from '@/router'
 import { useRoute } from 'vue-router'
 import { useApi } from '@/service/UseLlmNerSystemApi'
 import { apiService } from '@/service/LlmNerSystemService'
+import NerUsageTextArea from '@/components/NerUsageTextArea.vue'
+import NerUsageLabelSelector from '@/components/NerUsageLabelSelector.vue'
+import NerUsageModelSelector from '@/components/NerUsageModelSelector.vue'
 
-const modelsStore = useModelsStore()
 const route = useRoute()
 const usageId = computed(() => route.params.usageId)
 
-// Select Model
-const { availableModels } = storeToRefs(modelsStore)
-
-// Remove Label
-const removeEntityClass = (entityClass) => {
-  const index = templateModelRun.value.entity_classes.indexOf(entityClass)
-  if (index > -1) {
-    templateModelRun.value.entity_classes.splice(index, 1)
+onMounted(() => {
+  if (usageId.value) {
+    executeGetModelRun(usageId.value)
   }
-}
-
-// Add Label
-const newEntity = ref(null)
-const addEntityClass = () => {
-  templateModelRun.value.entity_classes.push(newEntity.value)
-  newEntity.value = null
-}
+})
 
 // Start NER Run
 const {
@@ -44,6 +32,7 @@ async function submit() {
     entity_classes: templateModelRun.value.entity_classes,
     llm_id: templateModelRun.value.model,
   }
+  console.log(requestBody)
   await executeCreateModelRun(requestBody)
   router.push({
     name: 'usage',
@@ -56,7 +45,7 @@ const templateModelRun = ref({
   _id: null,
   created_datetime_utc: null,
   text: null,
-  entity_classes: null,
+  entity_classes: [],
   model: null,
   entities: null,
 })
@@ -67,59 +56,21 @@ const {
   error: getModelRunError,
   execute: executeGetModelRun,
 } = useApi(apiService.getModelRunById, templateModelRun)
-
-onMounted(() => {
-  if (usageId.value) {
-    executeGetModelRun(usageId.value)
-  }
-})
 </script>
 
 <template>
   <div class="card">
     <div class="font-semibold text-2xl mb-5">NER Task Editor</div>
     <div class="mb-5">
-      <div class="font-semibold text-xl mb-2">Model</div>
-      <Select
-        v-model="templateModelRun.model"
-        :options="availableModels"
-        showClear
-        filter
-        optionLabel="name"
-        optionValue="id"
-        placeholder="Select a Model"
-        size="medium"
-        class="w-80"
-      />
+      <NerUsageModelSelector v-model:selectedModel="templateModelRun.model" />
     </div>
 
     <div class="mb-5">
-      <div class="font-semibold text-xl mb-2">Labels</div>
-      <div class="w-80 mb-2">
-        <InputGroup>
-          <InputText
-            placeholder="Add an Entity Label"
-            v-model="newEntity"
-            @keyup.enter="addEntityClass"
-          />
-          <Button label="Add" @click="addEntityClass" />
-        </InputGroup>
-      </div>
-      <div>
-        <Chip v-for="entityClass in templateModelRun.entity_classes" :label="entityClass" removable>
-          <template #removeicon>
-            <i class="pi pi-times-circle" @click="removeEntityClass(entityClass)" />
-          </template>
-        </Chip>
-      </div>
+      <NerUsageLabelSelector v-model:entityClasses="templateModelRun.entity_classes" />
     </div>
 
     <div class="mb-5">
-      <div class="font-semibold text-xl mb-2">Text</div>
-      <FloatLabel variant="on">
-        <Textarea id="on_label" v-model="templateModelRun.text" rows="12" cols="120" />
-        <label for="on_label">Enter a Text</label>
-      </FloatLabel>
+      <NerUsageTextArea v-model:inputText="templateModelRun.text" />
     </div>
 
     <div>
