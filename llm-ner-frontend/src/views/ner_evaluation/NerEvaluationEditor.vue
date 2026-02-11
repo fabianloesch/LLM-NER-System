@@ -1,12 +1,14 @@
 <script setup>
 import { FloatLabel, Textarea, Chip, Button, MultiSelect, Message } from 'primevue'
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useModelsStore } from '@/stores/models'
 import { storeToRefs } from 'pinia'
 import router from '@/router'
 import { validateCorpus } from '@/utils/json_validation'
 import { useToast } from 'primevue/usetoast'
 import { useRoute } from 'vue-router'
+import { useApi } from '@/service/UseLlmNerSystemApi'
+import { apiService } from '@/service/LlmNerSystemService'
 
 const toast = useToast()
 const modelsStore = useModelsStore()
@@ -15,16 +17,12 @@ const evaluationId = computed(() => route.params.evaluationId)
 
 // Select Model
 const { availableModels, getModelById } = storeToRefs(modelsStore)
-const selectedModels = ref([])
 const removeModel = (modelId) => {
-  const index = selectedModels.value.indexOf(modelId)
+  const index = inputData.value.models.indexOf(modelId)
   if (index > -1) {
-    selectedModels.value.splice(index, 1)
+    inputData.value.models.splice(index, 1)
   }
 }
-
-// Enter Text
-const inputCorpus = ref([])
 
 // Validation
 const validationErrors = ref([])
@@ -34,13 +32,13 @@ const isValid = computed(() => validationErrors.value.length === 0)
 function validateInput() {
   validationSuccess.value = false
 
-  if (!inputCorpus.value || inputCorpus.value.trim() === '') {
+  if (!inputData.value.corpus || inputData.value.corpus.trim() === '') {
     validationErrors.value = ['Bitte geben Sie einen Input-Corpus ein.']
     showError(validationErrors.value.join(' '))
     return false
   }
 
-  validationErrors.value = validateCorpus(inputCorpus.value)
+  validationErrors.value = validateCorpus(inputData.value.corpus)
 
   if (validationErrors.value.length === 0) {
     validationSuccess.value = true
@@ -52,65 +50,34 @@ function validateInput() {
   return validationErrors.value.length === 0
 }
 
-// Start NER Evaluation
-const isLoading = ref(false)
-const error = ref(null)
-const evaluationResult = ref(null)
-
-async function postNerEvaluation() {
-  isLoading.value = true
-  error.value = null
-
-  const myHeaders = new Headers()
-  myHeaders.append('Content-Type', 'application/json')
-
-  const raw = JSON.stringify({
-    corpus: JSON.parse(inputCorpus.value), // Parse the JSON before sending
-    llm_ids: selectedModels.value,
-  })
-
-  const requestOptions = {
-    method: 'POST',
-    headers: myHeaders,
-    body: raw,
-    redirect: 'follow',
-  }
-
-  try {
-    const response = await fetch('http://127.0.0.1:8000/api/modelEvaluation', requestOptions)
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`)
-    }
-
-    const data = await response.json()
-    evaluationResult.value = data.result
-  } catch (err) {
-    console.error('Fehler beim Start der NER-Evaluation', err)
-    error.value = err.message
-  } finally {
-    isLoading.value = false
-  }
-}
+// Start NER Run
+const {
+  data: responsePostEvaluation,
+  loading: postEvaluationIsLoading,
+  error: postEvaluationError,
+  execute: executeCreateEvaluation,
+} = useApi(apiService.createEvaluation, null)
 
 async function submit() {
   if (!validateInput()) {
     return
   }
 
-  if (selectedModels.value.length === 0) {
+  if (inputData.value.models.length === 0) {
     validationErrors.value = ['Bitte wählen Sie mindestens ein Modell aus']
     return
   }
 
-  await postNerEvaluation()
-
-  if (evaluationResult.value?._id) {
-    router.push({
-      name: 'evaluation',
-      params: { evaluationId: evaluationResult.value._id },
-    })
+  const requestBody = {
+    corpus: JSON.parse(inputData.value.corpus), // Parse the JSON before sending
+    llm_ids: inputData.value.models,
   }
+
+  await executeCreateEvaluation(requestBody)
+  router.push({
+    name: 'evaluation',
+    params: { evaluationId: responsePostEvaluation.value._id },
+  })
 }
 
 function showSuccess(details) {
@@ -134,31 +101,35 @@ function showError(details) {
   toast.add({ severity: 'error', summary: 'Error Message', detail: details, life: 5000 })
 }
 
-async function fetchNerEvaluation(evaluationId) {
-  isLoading.value = true
-  error.value = null
+// Get Model Run As Template
+const inputData = ref({
+  models: [],
+  corpus: '',
+})
 
-  try {
-    const response = await fetch(`http://127.0.0.1:8000/api/modelEvaluation/${evaluationId}`)
+const {
+  data: responseGetEvaluation,
+  loading: getEvaluationIsLoading,
+  error: getEvaluationError,
+  execute: executeGetEvaluation,
+} = useApi(apiService.getEvaluationById, null)
 
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`)
+// Watch für die API Response, um die Daten zu transformieren
+watch(
+  () => responseGetEvaluation.value,
+  (newData) => {
+    if (newData) {
+      inputData.value = {
+        models: newData.models || [],
+        corpus: newData.corpus ? JSON.stringify(newData.corpus, null, 2) : '',
+      }
     }
-
-    const data = await response.json()
-    selectedModels.value = [...data.result.models]
-    inputCorpus.value = JSON.stringify(data.result.corpus, null, 2)
-  } catch (err) {
-    console.error('Fehler beim Laden der Evaluation:', err)
-    error.value = err.message
-  } finally {
-    isLoading.value = false
-  }
-}
+  },
+)
 
 onMounted(() => {
   if (evaluationId.value) {
-    fetchNerEvaluation(evaluationId.value)
+    executeGetEvaluation(evaluationId.value)
   }
 })
 </script>
@@ -167,15 +138,10 @@ onMounted(() => {
   <div class="card">
     <div class="font-semibold text-2xl mb-5">NER Evaluation Editor</div>
 
-    <!-- API Error -->
-    <div v-if="error" class="mb-5">
-      <Message severity="error" :closable="false"> API-Fehler: {{ error }} </Message>
-    </div>
-
     <div class="mb-5">
       <div class="font-semibold text-xl mb-2">Model</div>
       <MultiSelect
-        v-model="selectedModels"
+        v-model="inputData.models"
         :options="availableModels"
         filter
         showClear
@@ -185,12 +151,12 @@ onMounted(() => {
         size="medium"
         :maxSelectedLabels="0"
         class="w-80"
-        :selectedItemsLabel="`${selectedModels.length} ${selectedModels.length === 1 ? 'Model' : 'Models'} selected`"
+        :selectedItemsLabel="`${inputData.models.length} ${inputData.models.length === 1 ? 'Model' : 'Models'} selected`"
         :selectionLimit="3"
       />
       <div class="flex gap-2 mt-2">
         <Chip
-          v-for="model in selectedModels"
+          v-for="model in inputData.models"
           :key="model"
           :label="getModelById(model)?.name ?? model"
           removable
@@ -207,10 +173,10 @@ onMounted(() => {
       <FloatLabel variant="on">
         <Textarea
           id="on_label"
-          v-model="inputCorpus"
+          v-model="inputData.corpus"
           rows="12"
           cols="120"
-          :class="{ 'p-invalid': !isValid && inputCorpus }"
+          :class="{ 'p-invalid': !isValid && inputData.corpus }"
           @input="validationSuccess = false"
         />
         <label for="on_label">Enter JSON Corpus</label>
@@ -235,8 +201,8 @@ onMounted(() => {
         label="Start NER"
         icon="pi pi-play-circle"
         iconPos="left"
-        :loading="isLoading"
-        :disabled="!isValid || selectedModels.length === 0"
+        :loading="postEvaluationIsLoading"
+        :disabled="!isValid || inputData.models.length === 0"
         @click="submit"
       />
     </div>

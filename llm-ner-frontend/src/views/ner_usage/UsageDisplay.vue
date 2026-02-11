@@ -5,46 +5,18 @@ import { Chip, Tag, Button } from 'primevue'
 import { useModelsStore } from '@/stores/models'
 import { storeToRefs } from 'pinia'
 import router from '@/router'
+import { useApi } from '@/service/UseLlmNerSystemApi'
+import { apiService } from '@/service/LlmNerSystemService'
 
 const route = useRoute()
 const usageId = computed(() => route.params.usageId)
 
 // Get NER Model Run
-const modelRun = ref({
-  _id: '',
-  created_datetime_utc: '',
-  text: '',
-  entity_classes: [],
-  model: '',
-  entities: [],
-})
-const isLoading = ref(false)
-const error = ref(null)
-
-async function fetchNerRun(modelRunId) {
-  isLoading.value = true
-  error.value = null
-
-  try {
-    const response = await fetch(`http://127.0.0.1:8000/api/modelRun/${modelRunId}`)
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`)
-    }
-
-    const data = await response.json()
-    modelRun.value = data.result
-  } catch (err) {
-    console.error('Fehler beim Laden des Modeldurchlaufs:', err)
-    error.value = err.message
-  } finally {
-    isLoading.value = false
-  }
-}
+const { data, loading, error, execute } = useApi(apiService.getModelRunById, null)
 
 onMounted(() => {
   if (usageId.value) {
-    fetchNerRun(usageId.value)
+    execute(usageId.value)
   }
 })
 
@@ -77,7 +49,7 @@ const colorPalette = [
 // Dynamisches Color Mapping basierend auf Labels
 const colorMap = computed(() => {
   const map = {}
-  modelRun.value.entity_classes.forEach((label, index) => {
+  data.value.entity_classes.forEach((label, index) => {
     map[label] = colorPalette[index % colorPalette.length]
   })
   return map
@@ -85,21 +57,22 @@ const colorMap = computed(() => {
 
 const textSegments = computed(() => {
   const segments = []
-  const sortedEntities = [...modelRun.value.entities].sort((a, b) => a.start - b.start)
+  if (data.value === null) return segments
+  const sortedEntities = [...data.value.entities].sort((a, b) => a.start - b.start)
   let lastEnd = 0
 
   sortedEntities.forEach((entity) => {
     // Füge Text vor der Entität hinzu
     if (entity.start > lastEnd) {
       segments.push({
-        text: modelRun.value.text.substring(lastEnd, entity.start),
+        text: data.value.text.substring(lastEnd, entity.start),
         isEntity: false,
       })
     }
 
     // Füge die Entität hinzu
     segments.push({
-      text: modelRun.value.text.substring(entity.start, entity.end),
+      text: data.value.text.substring(entity.start, entity.end),
       isEntity: true,
       label: entity.label,
     })
@@ -108,9 +81,9 @@ const textSegments = computed(() => {
   })
 
   // Füge verbleibenden Text hinzu
-  if (lastEnd < modelRun.value.text.length) {
+  if (lastEnd < data.value.text.length) {
     segments.push({
-      text: modelRun.value.text.substring(lastEnd),
+      text: data.value.text.substring(lastEnd),
       isEntity: false,
     })
   }
@@ -142,7 +115,7 @@ const restart = () => {
 </script>
 
 <template>
-  <div class="card">
+  <div v-if="data" class="card">
     <h2 class="font-semibold text-2xl mb-5">NER Result Display</h2>
 
     <!-- Metadaten -->
@@ -152,14 +125,14 @@ const restart = () => {
           <i class="pi pi-microchip-ai mr-1"></i>
           <span class="">Modell</span>
         </Tag>
-        <span class="">{{ getModelById(modelRun.model)?.name ?? modelRun.model }}</span>
+        <span class="">{{ getModelById(data.model)?.name ?? data.model }}</span>
       </span>
       <span class="flex items-center">
         <Tag severity="secondary" class="mr-1">
           <i class="pi pi-calendar-clock mr-1"></i>
           <span class="">Erstellungsdatum</span>
         </Tag>
-        <span class="">{{ formatDate(modelRun.created_datetime_utc) }}</span>
+        <span class="">{{ formatDate(data.created_datetime_utc) }}</span>
       </span>
     </div>
 
@@ -168,7 +141,7 @@ const restart = () => {
       <div class="text-xl mb-2">Entitätsklassen:</div>
       <div class="flex flex-wrap gap-3">
         <Chip
-          v-for="entityClass in modelRun.entity_classes"
+          v-for="entityClass in data.entity_classes"
           :key="entityClass"
           :label="entityClass"
           :style="{ backgroundColor: getLabelColor(entityClass) }"
@@ -193,10 +166,10 @@ const restart = () => {
 
     <!-- Entitäten Liste -->
     <div class="mb-5">
-      <div class="text-xl mb-2">Erkannte Entitäten ({{ modelRun.entities.length }}):</div>
+      <div class="text-xl mb-2">Erkannte Entitäten ({{ data.entities.length }}):</div>
       <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
         <div
-          v-for="(entity, index) in modelRun.entities"
+          v-for="(entity, index) in data.entities"
           :key="index"
           class="rounded-lg border border-white-300 p-4 shadow-sm hover:shadow-md transition-shadow border-l-4"
           :style="{ borderLeftColor: getLabelColor(entity.label) }"
@@ -204,7 +177,7 @@ const restart = () => {
           <div class="mb-2">
             <Chip :label="entity.label" :style="{ backgroundColor: getLabelColor(entity.label) }" />
           </div>
-          <div class="mb-2">"{{ modelRun.text.substring(entity.start, entity.end) }}"</div>
+          <div class="mb-2">"{{ data.text.substring(entity.start, entity.end) }}"</div>
           <div class="text-xs">Position: {{ entity.start }} - {{ entity.end }}</div>
         </div>
       </div>

@@ -7,54 +7,23 @@ import { storeToRefs } from 'pinia'
 import { transformEvaluationData, metrics } from '@/utils/format_evaluation_data'
 import { formatDate } from '@/utils/misc_utils'
 import router from '@/router'
+import { useApi } from '@/service/UseLlmNerSystemApi'
+import { apiService } from '@/service/LlmNerSystemService'
 
 const route = useRoute()
 const evaluationId = computed(() => route.params.evaluationId)
 onMounted(() => {
   if (evaluationId.value) {
-    fetchNerEvaluation(evaluationId.value)
+    execute(evaluationId.value)
   }
 })
 
-// Get NER Model Run
-const nerEvaluation = ref({
-  _id: '',
-  created_datetime_utc: '',
-  models: [],
-  entity_classes: [],
-  evaluations: {},
-})
-const isLoading = ref(false)
-const error = ref(null)
-const evaluationData = ref([])
-
-async function fetchNerEvaluation(evaluationId) {
-  isLoading.value = true
-  error.value = null
-
-  try {
-    const response = await fetch(`http://127.0.0.1:8000/api/modelEvaluation/${evaluationId}`)
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`)
-    }
-
-    const data = await response.json()
-    nerEvaluation.value = data.result
-    selectedEntityClasses.value = [...data.result.entity_classes, 'Overall']
-    selectedModels.value = [...data.result.models]
-    selectedMetrics.value = [...availableMetrics.value]
-  } catch (err) {
-    console.error('Fehler beim Laden der Evaluation:', err)
-    error.value = err.message
-  } finally {
-    isLoading.value = false
-  }
-}
+const { data, loading, error, execute } = useApi(apiService.getEvaluationById, null)
 
 // Entity Classes
 const availableEntityClasses = computed(() => {
-  return [...nerEvaluation.value.entity_classes, 'Overall'].sort((a, b) => {
+  if (!data.value?.entity_classes) return []
+  return [...data.value.entity_classes, 'Overall'].sort((a, b) => {
     // 'Overall' immer an erster Stelle
     if (a === 'Overall') return -1
     if (b === 'Overall') return 1
@@ -75,12 +44,15 @@ const sortedSelectedEntityClasses = computed(() => {
 
 // Models
 const { getModelById } = storeToRefs(useModelsStore())
-const availableModels = computed(() =>
-  nerEvaluation.value.models.map((id) => ({
-    id,
-    name: getModelById.value(id)?.name ?? id,
-  })),
-)
+const availableModels = computed(() => {
+  if (!data.value?.models) return []
+  return data.value?.models
+    .map((id) => ({
+      id,
+      name: getModelById.value(id)?.name ?? id,
+    }))
+    .sort((a, b) => a.name.localeCompare(b.name))
+})
 const selectedModels = ref([])
 
 // Metrics
@@ -88,24 +60,21 @@ const availableMetrics = ref(metrics)
 const selectedMetrics = ref(availableMetrics.value)
 
 // Data
-const filteredEvaluationData = computed(() => {
-  return evaluationData.value.filter(
-    (item) =>
-      selectedModels.value.includes(item.model) &&
-      selectedMetrics.value.some((m) => m.id === item.metric),
-  )
+
+const transformedData = computed(() => {
+  if (!data.value?.evaluations) return []
+  return transformEvaluationData(data.value.evaluations)
 })
 
-// Transform Shape of Evaluation Data
-watch(
-  () => nerEvaluation.value.evaluations,
-  (newEvaluations) => {
-    if (newEvaluations && Object.keys(newEvaluations).length > 0) {
-      evaluationData.value = transformEvaluationData(newEvaluations)
-    }
-  },
-  { deep: true },
-)
+const filteredEvaluationData = computed(() => {
+  return (
+    transformedData.value?.filter(
+      (item) =>
+        selectedModels.value.includes(item.model) &&
+        selectedMetrics.value.some((m) => m.id === item.metric),
+    ) ?? []
+  )
+})
 
 // Berechne für jede Metrik und Spalte den höchsten Wert
 const maxValues = computed(() => {
@@ -145,10 +114,29 @@ const restart = () => {
     params: { evaluationId: evaluationId.value },
   })
 }
+
+// Initialisiere Filter sobald Daten geladen sind
+watch(
+  () => data.value,
+  (newData) => {
+    if (newData) {
+      // Initialisiere selectedModels mit allen verfügbaren Models
+      if (newData.models && selectedModels.value.length === 0) {
+        selectedModels.value = [...newData.models]
+      }
+
+      // Initialisiere selectedEntityClasses mit allen verfügbaren Entity Classes
+      if (newData.entity_classes && selectedEntityClasses.value.length === 0) {
+        selectedEntityClasses.value = [...newData.entity_classes, 'Overall']
+      }
+    }
+  },
+  { immediate: true },
+)
 </script>
 
 <template>
-  <div class="card">
+  <div v-if="!loading" class="card">
     <h2 class="font-semibold text-2xl mb-5">NER Evaluation Display</h2>
 
     <!-- Metadaten -->
@@ -160,7 +148,7 @@ const restart = () => {
         </Tag>
         <div class="flex gap-2">
           <Chip
-            v-for="model in nerEvaluation.models"
+            v-for="model in data?.models"
             :key="model"
             class=""
             :label="getModelById(model)?.name ?? model"
@@ -173,7 +161,7 @@ const restart = () => {
           <i class="pi pi-calendar-clock mr-1"></i>
           <span class="">Erstellungsdatum</span>
         </Tag>
-        <span class="">{{ formatDate(nerEvaluation.created_datetime_utc) }}</span>
+        <span class="">{{ formatDate(data?.created_datetime_utc) }}</span>
       </span>
     </div>
 
@@ -230,7 +218,7 @@ const restart = () => {
       >
         <Column field="model" header="Model" style="width: 200px">
           <template #body="{ data }">
-            {{ getModelById(data.model)?.name ?? data.model }}
+            {{ getModelById(data?.model)?.name ?? data.model }}
           </template>
         </Column>
         <Column field="metric" header="Metric" style="width: 120px">

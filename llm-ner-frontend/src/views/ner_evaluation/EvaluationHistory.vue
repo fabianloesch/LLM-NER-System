@@ -4,43 +4,22 @@ import { DataTable, Column, Button } from 'primevue'
 import { useModelsStore } from '@/stores/models'
 import router from '@/router'
 import { formatDate } from '@/utils/misc_utils'
+import { useApi } from '@/service/UseLlmNerSystemApi'
+import { apiService } from '@/service/LlmNerSystemService'
 
 // Get Model by Model Id
 const modelsStore = useModelsStore()
 const { getModelById } = modelsStore
 
-const evaluationHistotry = ref([])
-const isLoading = ref(false)
-const error = ref(null)
-
-async function fetchEvaluationHistory() {
-  isLoading.value = true
-  error.value = null
-
-  try {
-    const response = await fetch('http://127.0.0.1:8000/api/modelEvaluations')
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`)
-    }
-
-    const data = await response.json()
-    evaluationHistotry.value = data.result
-  } catch (err) {
-    console.error('Fehler beim Laden des Usage-Historie:', err)
-    error.value = err.message
-  } finally {
-    isLoading.value = false
-  }
-}
+const { data, loading, error, execute } = useApi(apiService.getAllEvaluations, [])
 
 onMounted(() => {
-  fetchEvaluationHistory()
+  execute()
 })
 
 const groupedEvaluationsByDate = computed(() => {
   // Gruppieren nach Datum
-  const grouped = evaluationHistotry.value.reduce((acc, item) => {
+  const grouped = data.value.reduce((acc, item) => {
     const date = new Date(item.created_datetime_utc)
     const dateKey = date.toLocaleDateString('de-DE', {
       year: 'numeric',
@@ -103,7 +82,7 @@ function routeToEvaluationDetails(evaluation) {
           <template #body="{ data }">
             <div>
               <div v-for="model in data.models.sort((m) => m.name)">
-                {{ getModelById(model).name }}
+                {{ getModelById(model)?.name ?? model }}
               </div>
               <!-- {{ data.models.map((m) => getModelById(m).name).join(' | ') }} -->
             </div>

@@ -1,12 +1,9 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
+import { useApi } from '@/service/UseLlmNerSystemApi'
+import { apiService } from '@/service/LlmNerSystemService'
 
 export const useModelsStore = defineStore('models', () => {
-  // State
-  const availableModels = ref([])
-  const isLoading = ref(false)
-  const error = ref(null)
-
   // Getters
   const getModelById = computed(() => {
     return (id) => availableModels.value.find((model) => model.id === id)
@@ -14,32 +11,17 @@ export const useModelsStore = defineStore('models', () => {
 
   const hasModels = computed(() => availableModels.value.length > 0)
 
-  // Actions
-  async function fetchAvailableModels() {
-    isLoading.value = true
-    error.value = null
-
-    try {
-      const response = await fetch('http://127.0.0.1:8000/api/availableModels')
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`)
-      }
-
-      const data = await response.json()
-      availableModels.value = data.result
-    } catch (err) {
-      console.error('Fehler beim Laden der Modelle:', err)
-      error.value = err.message
-    } finally {
-      isLoading.value = false
-    }
-  }
+  const {
+    data: availableModels,
+    loading,
+    error,
+    execute: fetchAvailableModels,
+  } = useApi(apiService.getAvailableModels, [])
 
   return {
     // State
     availableModels,
-    isLoading,
+    isLoading: loading,
     error,
     // Getters
     getModelById,

@@ -5,6 +5,8 @@ import { useModelsStore } from '@/stores/models'
 import { storeToRefs } from 'pinia'
 import router from '@/router'
 import { useRoute } from 'vue-router'
+import { useApi } from '@/service/UseLlmNerSystemApi'
+import { apiService } from '@/service/LlmNerSystemService'
 
 const modelsStore = useModelsStore()
 const route = useRoute()
@@ -12,108 +14,63 @@ const usageId = computed(() => route.params.usageId)
 
 // Select Model
 const { availableModels } = storeToRefs(modelsStore)
-const selectedModel = ref(null)
 
 // Remove Label
-const entityclasses = ref([])
 const removeEntityClass = (entityClass) => {
-  const index = entityclasses.value.indexOf(entityClass)
+  const index = templateModelRun.value.entity_classes.indexOf(entityClass)
   if (index > -1) {
-    entityclasses.value.splice(index, 1)
+    templateModelRun.value.entity_classes.splice(index, 1)
   }
 }
 
 // Add Label
 const newEntity = ref(null)
 const addEntityClass = () => {
-  entityclasses.value.push(newEntity.value)
+  templateModelRun.value.entity_classes.push(newEntity.value)
   newEntity.value = null
 }
 
-// Enter Text
-const inputText = ref(null)
-
 // Start NER Run
-const isLoading = ref(false)
-const error = ref(null)
-
-const nerResult = ref(null)
-
-async function postNerModelRun() {
-  isLoading.value = true
-  error.value = null
-
-  const myHeaders = new Headers()
-  myHeaders.append('Content-Type', 'application/json')
-
-  const raw = JSON.stringify({
-    text: inputText.value,
-    entity_classes: entityclasses.value,
-    llm_id: selectedModel.value,
-  })
-
-  const requestOptions = {
-    method: 'POST',
-    headers: myHeaders,
-    body: raw,
-    redirect: 'follow',
-  }
-
-  try {
-    const response = await fetch('http://127.0.0.1:8000/api/modelRun', requestOptions)
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`)
-    }
-
-    const data = await response.json()
-    nerResult.value = data.result
-  } catch (err) {
-    console.error('Fehler beim Start des NER-Durchlaufs', err)
-    error.value = err.message
-  } finally {
-    isLoading.value = false
-  }
-}
+const {
+  data: responsePostModelRun,
+  loading: postModelRunIsLoading,
+  error: postModelRunError,
+  execute: executeCreateModelRun,
+} = useApi(apiService.createModelRun, null)
 
 async function submit() {
-  await postNerModelRun()
-  // const id = nerResult.value._id
+  const requestBody = {
+    text: templateModelRun.value.text,
+    entity_classes: templateModelRun.value.entity_classes,
+    llm_id: templateModelRun.value.model,
+  }
+  await executeCreateModelRun(requestBody)
   router.push({
     name: 'usage',
-    params: { usageId: nerResult.value._id },
+    params: { usageId: responsePostModelRun.value._id },
   })
 }
 
-const templateModelRun = ref({})
+// Get Model Run As Template
+const templateModelRun = ref({
+  _id: null,
+  created_datetime_utc: null,
+  text: null,
+  entity_classes: null,
+  model: null,
+  entities: null,
+})
 
-async function fetchNerRun(modelRunId) {
-  isLoading.value = true
-  error.value = null
-
-  try {
-    const response = await fetch(`http://127.0.0.1:8000/api/modelRun/${modelRunId}`)
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`)
-    }
-
-    const data = await response.json()
-    templateModelRun.value = data.result
-    inputText.value = data.result.text
-    selectedModel.value = data.result.model
-    entityclasses.value = data.result.entity_classes
-  } catch (err) {
-    console.error('Fehler beim Laden des Modeldurchlaufs:', err)
-    error.value = err.message
-  } finally {
-    isLoading.value = false
-  }
-}
+const {
+  data: responseGetModelRun,
+  loading: getModelRunIsLoading,
+  error: getModelRunError,
+  execute: executeGetModelRun,
+} = useApi(apiService.getModelRunById, templateModelRun)
 
 onMounted(() => {
   if (usageId.value) {
-    fetchNerRun(usageId.value)
+    executeGetModelRun(usageId.value)
   }
 })
 </script>
@@ -124,7 +81,7 @@ onMounted(() => {
     <div class="mb-5">
       <div class="font-semibold text-xl mb-2">Model</div>
       <Select
-        v-model="selectedModel"
+        v-model="templateModelRun.model"
         :options="availableModels"
         showClear
         filter
@@ -149,7 +106,7 @@ onMounted(() => {
         </InputGroup>
       </div>
       <div>
-        <Chip v-for="entityClass in entityclasses" :label="entityClass" removable>
+        <Chip v-for="entityClass in templateModelRun.entity_classes" :label="entityClass" removable>
           <template #removeicon>
             <i class="pi pi-times-circle" @click="removeEntityClass(entityClass)" />
           </template>
@@ -160,7 +117,7 @@ onMounted(() => {
     <div class="mb-5">
       <div class="font-semibold text-xl mb-2">Text</div>
       <FloatLabel variant="on">
-        <Textarea id="on_label" v-model="inputText" rows="12" cols="120" />
+        <Textarea id="on_label" v-model="templateModelRun.text" rows="12" cols="120" />
         <label for="on_label">Enter a Text</label>
       </FloatLabel>
     </div>
@@ -170,7 +127,7 @@ onMounted(() => {
         label="Start NER"
         icon="pi pi-play-circle"
         iconPos="left"
-        :loading="isLoading"
+        :loading="postModelRunIsLoading"
         @click="submit()"
       />
     </div>

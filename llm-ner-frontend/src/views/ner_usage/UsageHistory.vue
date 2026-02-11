@@ -3,43 +3,22 @@ import { ref, computed, onMounted } from 'vue'
 import { DataTable, Column, Button } from 'primevue'
 import { useModelsStore } from '@/stores/models'
 import router from '@/router'
+import { useApi } from '@/service/UseLlmNerSystemApi'
+import { apiService } from '@/service/LlmNerSystemService'
 
 // Get Model by Model Id
 const modelsStore = useModelsStore()
 const { getModelById } = modelsStore
 
-const usageHistotry = ref([])
-const isLoading = ref(false)
-const error = ref(null)
-
-async function fetchUsageHistory() {
-  isLoading.value = true
-  error.value = null
-
-  try {
-    const response = await fetch('http://127.0.0.1:8000/api/modelRuns')
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`)
-    }
-
-    const data = await response.json()
-    usageHistotry.value = data.result
-  } catch (err) {
-    console.error('Fehler beim Laden des Usage-Historie:', err)
-    error.value = err.message
-  } finally {
-    isLoading.value = false
-  }
-}
+const { data, loading, error, execute } = useApi(apiService.getAllUsages, [])
 
 onMounted(() => {
-  fetchUsageHistory()
+  execute()
 })
 
 const groupedUsagesByDate = computed(() => {
   // Gruppieren nach Datum
-  const grouped = usageHistotry.value.reduce((acc, item) => {
+  const grouped = data.value.reduce((acc, item) => {
     const date = new Date(item.created_datetime_utc)
     const dateKey = date.toLocaleDateString('de-DE', {
       year: 'numeric',
