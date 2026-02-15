@@ -1,6 +1,6 @@
 <script setup>
 import { InputGroup, InputText, Button, Chip } from 'primevue'
-import { defineModel, ref } from 'vue'
+import { ref } from 'vue'
 
 const entityClasses = defineModel('entityClasses', { type: Array })
 

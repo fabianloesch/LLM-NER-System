@@ -1,10 +1,11 @@
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { computed, onMounted } from 'vue'
 import { DataTable, Column, Button } from 'primevue'
 import { useModelsStore } from '@/stores/models'
 import router from '@/router'
 import { useApi } from '@/service/UseLlmNerSystemApi'
 import { apiService } from '@/service/LlmNerSystemService'
+import { formatDate } from '@/utils/misc_utils'
 
 // Get Model by Model Id
 const modelsStore = useModelsStore()
@@ -48,17 +49,6 @@ const groupedUsagesByDate = computed(() => {
       ),
     }))
 })
-
-const formatDate = (dateString) => {
-  const date = new Date(dateString)
-  return date.toLocaleString('de-DE', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  })
-}
 
 function routeToUsageDetails(usageRun) {
   router.push({

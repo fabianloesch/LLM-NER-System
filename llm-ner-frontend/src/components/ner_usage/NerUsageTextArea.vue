@@ -1,6 +1,5 @@
 <script setup>
 import { FloatLabel, Textarea } from 'primevue'
-import { defineModel } from 'vue'
 const inputText = defineModel('inputText', { type: String })
 </script>
 

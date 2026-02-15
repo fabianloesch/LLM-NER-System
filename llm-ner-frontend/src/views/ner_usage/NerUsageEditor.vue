@@ -5,10 +5,9 @@ import router from '@/router'
 import { useRoute } from 'vue-router'
 import { useApi } from '@/service/UseLlmNerSystemApi'
 import { apiService } from '@/service/LlmNerSystemService'
-import NerUsageTextArea from '@/components/NerUsageTextArea.vue'
-import NerUsageLabelSelector from '@/components/NerUsageLabelSelector.vue'
-import NerUsageModelSelector from '@/components/NerUsageModelSelector.vue'
-
+import NerUsageTextArea from '@/components/ner_usage/NerUsageTextArea.vue'
+import NerUsageLabelSelector from '@/components/ner_usage/NerUsageLabelSelector.vue'
+import LLmSelector from '@/components/LLmSelector.vue'
 const route = useRoute()
 const usageId = computed(() => route.params.usageId)
 
@@ -62,7 +61,7 @@ const {
   <div class="card">
     <div class="font-semibold text-2xl mb-5">NER Task Editor</div>
     <div class="mb-5">
-      <NerUsageModelSelector v-model:selectedModel="templateModelRun.model" />
+      <LLmSelector v-model:selectedModel="templateModelRun.model" :isSingleSelect="true" />
     </div>
 
     <div class="mb-5">
