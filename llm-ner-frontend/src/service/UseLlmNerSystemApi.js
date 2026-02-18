@@ -1,9 +1,11 @@
 import { ref } from 'vue'
+import { useToastUtils } from '@/utils/toast_utils'
 
 export function useApi(apiFunction, defaultValue = null) {
   const data = ref(defaultValue)
   const loading = ref(false)
   const error = ref(null)
+  const { handleErrors } = useToastUtils()
 
   const execute = async (...args) => {
     loading.value = true
@@ -17,6 +19,7 @@ export function useApi(apiFunction, defaultValue = null) {
       error.value = err.response
         ? `Fehler beim Laden (${err.response.status} ${err.response.statusText})`
         : err.message
+      handleErrors([error.value])
       throw err
     } finally {
       loading.value = false

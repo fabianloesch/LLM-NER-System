@@ -2,10 +2,9 @@
 import { FloatLabel, Textarea, Button } from 'primevue'
 import { ref, computed } from 'vue'
 import { validateCorpus } from '@/utils/json_validation'
-import { handleErrors, handleSuccess } from '@/utils/toast_utils'
-import { useToast } from 'primevue/usetoast'
+import { useToastUtils } from '@/utils/toast_utils'
 
-const toast = useToast()
+const { handleSuccess, handleErrors } = useToastUtils()
 const corpus = defineModel('corpus', { type: String, default: '' })
 
 const validationErrors = ref([])
@@ -18,7 +17,7 @@ const validateInput = () => {
 
   if (!corpus.value || corpus.value.trim() === '') {
     validationErrors.value = ['Bitte geben Sie einen Input-Corpus ein.']
-    handleErrors(toast, validationErrors.value)
+    handleErrors(validationErrors.value)
     return false
   }
 
@@ -26,13 +25,10 @@ const validateInput = () => {
 
   if (validationErrors.value.length === 0) {
     validationSuccess.value = true
-    handleSuccess(
-      toast,
-      'Validierung erfolgreich! Der Input-Corpus entspricht dem erwarteten Schema.',
-    )
+    handleSuccess('Validierung erfolgreich! Der Input-Corpus entspricht dem erwarteten Schema.')
     return true
   } else {
-    handleErrors(toast, validationErrors.value)
+    handleErrors(validationErrors.value)
     return false
   }
 }

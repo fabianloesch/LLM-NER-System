@@ -30,11 +30,6 @@ async function submit() {
     return
   }
 
-  if (inputData.value.models.length === 0) {
-    showError('Bitte wählen Sie mindestens ein Modell aus')
-    return
-  }
-
   const requestBody = {
     corpus: JSON.parse(inputData.value.corpus),
     llm_ids: inputData.value.models,

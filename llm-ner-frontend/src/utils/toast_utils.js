@@ -1,26 +1,14 @@
-function showSuccess(toast, details) {
-  toast.add({
-    severity: 'success',
-    summary: 'Success Message',
-    detail: details,
-    life: 5000,
-  })
-}
+import { useToast } from 'primevue/usetoast'
 
-function showError(toast, details) {
-  toast.add({
-    severity: 'error',
-    summary: 'Error Message',
-    detail: details,
-    life: 5000,
-  })
-}
+export function useToastUtils() {
+  const toast = useToast()
 
-// Handle validation events from child
-export function handleSuccess(toast, message) {
-  showSuccess(toast, message)
-}
-
-export function handleErrors(toast, errors) {
-  showError(toast, errors.join(' '))
+  return {
+    handleSuccess(message) {
+      toast.add({ severity: 'success', summary: 'Erfolg', detail: message, life: 5000 })
+    },
+    handleErrors(errors) {
+      toast.add({ severity: 'error', summary: 'Fehler', detail: errors.join(' '), life: 5000 })
+    },
+  }
 }
