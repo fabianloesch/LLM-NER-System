@@ -2,19 +2,15 @@
 import { FloatLabel, Textarea, Button } from 'primevue'
 import { ref, computed } from 'vue'
 import { validateCorpus } from '@/utils/json_validation'
+import { handleErrors, handleSuccess } from '@/utils/toast_utils'
+import { useToast } from 'primevue/usetoast'
 
+const toast = useToast()
 const corpus = defineModel('corpus', { type: String, default: '' })
-
-const emit = defineEmits(['validationSuccess', 'validationError'])
 
 const validationErrors = ref([])
 const validationSuccess = ref(false)
 const isValid = computed(() => validationErrors.value.length === 0)
-
-const handleInput = () => {
-  validationSuccess.value = false
-  validationErrors.value = []
-}
 
 const validateInput = () => {
   validationSuccess.value = false
@@ -22,7 +18,7 @@ const validateInput = () => {
 
   if (!corpus.value || corpus.value.trim() === '') {
     validationErrors.value = ['Bitte geben Sie einen Input-Corpus ein.']
-    emit('validationError', validationErrors.value)
+    handleErrors(toast, validationErrors.value)
     return false
   }
 
@@ -30,13 +26,13 @@ const validateInput = () => {
 
   if (validationErrors.value.length === 0) {
     validationSuccess.value = true
-    emit(
-      'validationSuccess',
+    handleSuccess(
+      toast,
       'Validierung erfolgreich! Der Input-Corpus entspricht dem erwarteten Schema.',
     )
     return true
   } else {
-    emit('validationError', validationErrors.value)
+    handleErrors(toast, validationErrors.value)
     return false
   }
 }
@@ -52,14 +48,7 @@ defineExpose({
   <div>
     <div class="font-semibold text-xl mb-2">Corpus</div>
     <FloatLabel variant="on">
-      <Textarea
-        id="on_label"
-        v-model="corpus"
-        rows="12"
-        cols="120"
-        :class="{ 'p-invalid': !isValid && corpus }"
-        @input="handleInput"
-      />
+      <Textarea id="on_label" v-model="corpus" rows="12" cols="120" :invalid="!isValid" />
       <label for="on_label">Enter JSON Corpus</label>
     </FloatLabel>
     <div class="flex items-center">
@@ -76,4 +65,5 @@ defineExpose({
       </small>
     </div>
   </div>
+  {{ validationErrors.join(',') }}
 </template>

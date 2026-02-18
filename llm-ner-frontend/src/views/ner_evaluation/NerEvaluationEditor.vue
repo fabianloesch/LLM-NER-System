@@ -2,18 +2,16 @@
 import { Button } from 'primevue'
 import { ref, computed, onMounted, watch } from 'vue'
 import router from '@/router'
-import { useToast } from 'primevue/usetoast'
 import { useRoute } from 'vue-router'
 import { useApi } from '@/service/UseLlmNerSystemApi'
 import { apiService } from '@/service/LlmNerSystemService'
 import LLmSelector from '@/components/LLmSelector.vue'
-import CorpusEditor from '@/components/ner_evaluation/NerEvaluationCorpusInput.vue'
+import NerEvaluationCorpusInput from '@/components/ner_evaluation/NerEvaluationCorpusInput.vue'
 
-const toast = useToast()
 const route = useRoute()
 const evaluationId = computed(() => route.params.evaluationId)
 
-// Reference to CorpusEditor component
+// Reference to NerEvaluationCorpusInput component
 const corpusEditorRef = ref(null)
 
 // Start NER Run
@@ -47,33 +45,6 @@ async function submit() {
     name: 'evaluation',
     params: { evaluationId: responsePostEvaluation.value._id },
   })
-}
-
-function showSuccess(details) {
-  toast.add({
-    severity: 'success',
-    summary: 'Success Message',
-    detail: details,
-    life: 5000,
-  })
-}
-
-function showError(details) {
-  toast.add({
-    severity: 'error',
-    summary: 'Error Message',
-    detail: details,
-    life: 5000,
-  })
-}
-
-// Handle validation events from child
-function handleValidationSuccess(message) {
-  showSuccess(message)
-}
-
-function handleValidationError(errors) {
-  showError(errors.join(' '))
 }
 
 // Get Model Run As Template
@@ -117,12 +88,7 @@ onMounted(() => {
     </div>
 
     <div class="mb-5">
-      <CorpusEditor
-        ref="corpusEditorRef"
-        v-model:corpus="inputData.corpus"
-        @validationSuccess="handleValidationSuccess"
-        @validationError="handleValidationError"
-      />
+      <NerEvaluationCorpusInput ref="corpusEditorRef" v-model:corpus="inputData.corpus" />
     </div>
 
     <div class="mt-6">
