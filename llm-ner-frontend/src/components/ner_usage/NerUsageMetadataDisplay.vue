@@ -15,16 +15,16 @@ const { getModelById } = storeToRefs(modelsStore)
     <span class="flex items-center">
       <Tag severity="secondary" class="mr-1">
         <i class="pi pi-microchip-ai mr-1"></i>
-        <span class="">Modell</span>
+        <span>Model</span>
       </Tag>
-      <span class="">{{ getModelById(model_id)?.name ?? model_id }}</span>
+      <span>{{ getModelById(model_id)?.name ?? model_id }}</span>
     </span>
     <span class="flex items-center">
       <Tag severity="secondary" class="mr-1">
         <i class="pi pi-calendar-clock mr-1"></i>
-        <span class="">Erstellungsdatum</span>
+        <span>Creation Date</span>
       </Tag>
-      <span class="">{{ formatDate(created_datetime_utc) }}</span>
+      <span>{{ formatDate(created_datetime_utc) }}</span>
     </span>
   </div>
 </template>

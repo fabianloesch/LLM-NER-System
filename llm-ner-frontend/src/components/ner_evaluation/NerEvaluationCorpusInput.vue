@@ -33,7 +33,6 @@ const validateInput = () => {
   }
 }
 
-// Expose validate function for parent to call
 defineExpose({
   validateInput,
   isValid,
@@ -49,7 +48,7 @@ defineExpose({
     </FloatLabel>
     <div class="flex items-center">
       <Button
-        label="Validieren"
+        label="Validate"
         icon="pi pi-check"
         iconPos="left"
         severity="secondary"
@@ -61,5 +60,4 @@ defineExpose({
       </small>
     </div>
   </div>
-  {{ validationErrors.join(',') }}
 </template>

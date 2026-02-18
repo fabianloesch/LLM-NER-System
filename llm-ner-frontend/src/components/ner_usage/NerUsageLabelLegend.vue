@@ -4,7 +4,7 @@ defineProps({ entity_classes: Array, getLabelColor: Function })
 </script>
 
 <template>
-  <div class="text-xl mb-2">Entitätsklassen:</div>
+  <div class="text-xl mb-2">Entity Classes:</div>
   <div class="flex flex-wrap gap-3">
     <Chip
       v-for="entityClass in entity_classes"

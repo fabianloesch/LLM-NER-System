@@ -14,13 +14,12 @@ const { getModelById } = storeToRefs(modelsStore)
   <div class="flex items-center mb-3">
     <Tag severity="secondary" class="mr-2">
       <i class="pi pi-microchip-ai mr-1"></i>
-      <span class="">Modelle</span>
+      <span>Models</span>
     </Tag>
     <div class="flex gap-2">
       <Chip
         v-for="model in model_ids"
         :key="model"
-        class=""
         :label="getModelById(model)?.name ?? model"
         :style="{ backgroundColor: 'var(--primary-color)', color: '#FFFFFF' }"
       />
@@ -29,8 +28,8 @@ const { getModelById } = storeToRefs(modelsStore)
   <span class="flex items-center">
     <Tag severity="secondary" class="mr-1">
       <i class="pi pi-calendar-clock mr-1"></i>
-      <span class="">Erstellungsdatum</span>
+      <span>Creation Date</span>
     </Tag>
-    <span class="">{{ formatDate(created_datetime_utc) }}</span>
+    <span>{{ formatDate(created_datetime_utc) }}</span>
   </span>
 </template>

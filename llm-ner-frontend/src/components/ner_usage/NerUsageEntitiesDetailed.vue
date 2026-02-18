@@ -4,7 +4,7 @@ const props = defineProps({ text: String, entities: Array, getLabelColor: Functi
 </script>
 
 <template>
-  <div class="text-xl mb-2">Erkannte Entitäten ({{ entities.length }}):</div>
+  <div class="text-xl mb-2">Recognized Entities ({{ entities.length }}):</div>
   <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
     <div
       v-for="(entity, index) in entities"
