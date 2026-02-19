@@ -1,7 +1,7 @@
 from app.core.config import config
 import httpx
 
-class OpenRouterClient:
+class LlmGatewayClient:
     CHAT_COMPLETION_URL = "https://openrouter.ai/api/v1/chat/completions"
     AVAILABLE_MODELS_URL = "https://openrouter.ai/api/v1/models"
 

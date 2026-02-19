@@ -12,10 +12,10 @@ class TestUsageServiceIntegration:
     async def test_create_usage_response_integration(
         self, 
         test_db_client, 
-        mock_openrouter_service,
+        mock_llm_gateway_service,
         sample_usage_run_request
     ):
-        service = UsageService(test_db_client, mock_openrouter_service)
+        service = UsageService(test_db_client, mock_llm_gateway_service)
         
         result = await service.create_usage_response(
             text=sample_usage_run_request["text"],
@@ -34,16 +34,16 @@ class TestUsageServiceIntegration:
     async def test_create_usage_response_with_entities(
         self, 
         test_db_client, 
-        mock_openrouter_service,
+        mock_llm_gateway_service,
         sample_entities
     ):
-        mock_openrouter_service.run_ner_model.return_value = {
+        mock_llm_gateway_service.run_ner_model.return_value = {
             "model": "test-model",
             "identifier": None,
             "response": sample_entities
         }
         
-        service = UsageService(test_db_client, mock_openrouter_service)
+        service = UsageService(test_db_client, mock_llm_gateway_service)
         
         result = await service.create_usage_response(
             text="Test",

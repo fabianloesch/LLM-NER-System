@@ -1,15 +1,15 @@
-from app.openrouter.openrouter_service import OpenRouterService
+from app.llm_gateway.llm_gateway_service import LlmGatewayService
 from app.db.mongo_db_client import MongoDbClient
 from bson import ObjectId
 
 class UsageService:
 
-    def __init__(self, mongo_db_client: MongoDbClient, openrouter_service: OpenRouterService = None):
+    def __init__(self, mongo_db_client: MongoDbClient, llm_gateway_service: LlmGatewayService = None):
         self._mongo_db_client = mongo_db_client
-        self._openrouter = openrouter_service
+        self._llm_gateway = llm_gateway_service
 
     async def create_usage_response(self, text: str, entity_classes: list, llm_id: str):
-        entities = (await self._openrouter.run_ner_model(text, entity_classes, llm_id))["response"]
+        entities = (await self._llm_gateway.run_ner_model(text, entity_classes, llm_id))["response"]
         result = {
             "text": text,
             "entity_classes": entity_classes,

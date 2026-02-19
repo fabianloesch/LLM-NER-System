@@ -12,10 +12,10 @@ class TestEvaluationServiceIntegration:
     async def test_create_evaluation_response_integration(
         self, 
         test_db_client, 
-        mock_openrouter_service,
+        mock_llm_gateway_service,
         sample_evaluation_request
     ):
-        service = EvaluationService(test_db_client, mock_openrouter_service)
+        service = EvaluationService(test_db_client, mock_llm_gateway_service)
         
         result = await service.create_evaluation_response(
             corpus = sample_evaluation_request["corpus"],

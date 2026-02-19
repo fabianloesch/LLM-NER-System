@@ -24,12 +24,12 @@ const router = createRouter({
         {
           path: '/usage/:usageId',
           name: 'usage',
-          component: () => import('@/views/ner_usage/UsageDisplay.vue'),
+          component: () => import('@/views/ner_usage/NerUsageDisplay.vue'),
         },
         {
           path: '/usage/history',
           name: 'usage-history',
-          component: () => import('@/views/ner_usage/UsageHistory.vue'),
+          component: () => import('@/views/ner_usage/NerUsageHistory.vue'),
         },
         {
           path: '/evaluation/new/:evaluationId?',
@@ -39,12 +39,12 @@ const router = createRouter({
         {
           path: '/evaluation/:evaluationId',
           name: 'evaluation',
-          component: () => import('@/views/ner_evaluation/EvaluationDisplay.vue'),
+          component: () => import('@/views/ner_evaluation/NerEvaluationDisplay.vue'),
         },
         {
           path: '/evaluation/history',
           name: 'evaluation-history',
-          component: () => import('@/views/ner_evaluation/EvaluationHistory.vue'),
+          component: () => import('@/views/ner_evaluation/NerEvaluationHistory.vue'),
         },
         {
           path: '/documentation',

@@ -1,16 +1,16 @@
 from fastapi import APIRouter, Depends
 from app.models.available_models_dtos import AvailableModelsResponseDto
-from app.openrouter.openrouter_service import OpenRouterService
-from app.openrouter.openrouter_client import OpenRouterClient
+from app.llm_gateway.llm_gateway_service import LlmGatewayService
+from app.llm_gateway.llm_gateway_client import LlmGatewayClient
 
 router = APIRouter()
 
-def get_openrouter_service():
-    return OpenRouterService(OpenRouterClient())
+def get_llm_gateway_service():
+    return LlmGatewayService(LlmGatewayClient())
 
 @router.get("/availableModels", response_model=AvailableModelsResponseDto)
 async def get_available_models(
-    openrouter_service: OpenRouterService = Depends(get_openrouter_service)
+    llm_gateway_service: LlmGatewayService = Depends(get_llm_gateway_service)
 ):
-    result = await openrouter_service.get_available_models()
+    result = await llm_gateway_service.get_available_models()
     return {"result": result}

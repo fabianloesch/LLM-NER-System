@@ -9,11 +9,11 @@ from app.services.evaluation_service import EvaluationService
 # ============================================================================
 
 @pytest.fixture
-def test_evaluation_service(test_db_client, mock_openrouter_service):
+def test_evaluation_service(test_db_client, mock_llm_gateway_service):
     """EvaluationService with Test Dependencies"""
     return EvaluationService(
         mongo_db_client=test_db_client,
-        openrouter_service=mock_openrouter_service
+        llm_gateway_service=mock_llm_gateway_service
     )
 
 

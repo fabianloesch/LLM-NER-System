@@ -1,23 +1,23 @@
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { computed, onMounted } from 'vue'
 import { DataTable, Column, Button } from 'primevue'
 import { useModelsStore } from '@/stores/models'
 import router from '@/router'
-import { formatDate } from '@/utils/misc_utils'
 import { useApi } from '@/service/UseLlmNerSystemApi'
 import { apiService } from '@/service/LlmNerSystemService'
+import { formatDate } from '@/utils/misc_utils'
 
 // Get Model by Model Id
 const modelsStore = useModelsStore()
 const { getModelById } = modelsStore
 
-const { data, loading, error, execute } = useApi(apiService.getAllEvaluations, [])
+const { data, loading, error, execute } = useApi(apiService.getAllUsages, [])
 
 onMounted(() => {
   execute()
 })
 
-const groupedEvaluationsByDate = computed(() => {
+const groupedUsagesByDate = computed(() => {
   // Gruppieren nach Datum
   const grouped = data.value.reduce((acc, item) => {
     const date = new Date(item.created_datetime_utc)
@@ -50,22 +50,22 @@ const groupedEvaluationsByDate = computed(() => {
     }))
 })
 
-function routeToEvaluationDetails(evaluation) {
+function routeToUsageDetails(usageRun) {
   router.push({
-    name: 'evaluation',
-    params: { evaluationId: evaluation._id },
+    name: 'usage',
+    params: { usageId: usageRun._id },
   })
 }
 </script>
 
 <template>
   <div class="card">
-    <div class="font-semibold text-2xl mb-5">Evaluation History</div>
-    <div v-for="group in groupedEvaluationsByDate" :key="group.date" class="max-w-[800px] mb-6">
+    <div class="font-semibold text-2xl mb-5">NER Usage History</div>
+    <div v-for="group in groupedUsagesByDate" :key="group.date" class="max-w-[800px] mb-6">
       <DataTable
         :value="group.items"
         :show-headers="false"
-        @row-click="(e) => routeToEvaluationDetails(e.data)"
+        @row-click="(e) => routeToUsageDetails(e.data)"
         :rowHover="true"
         selectionMode="single"
         tableStyle="min-width: 50rem"
@@ -78,21 +78,16 @@ function routeToEvaluationDetails(evaluation) {
             {{ formatDate(data.created_datetime_utc) ?? data.created_datetime_utc }}
           </template>
         </Column>
-        <Column field="model" style="">
+        <Column field="model" style="width: 33%">
           <template #body="{ data }">
-            <div>
-              <div v-for="model in data.models.sort((m) => m.name)">
-                {{ getModelById(model)?.name ?? model }}
-              </div>
-              <!-- {{ data.models.map((m) => getModelById(m).name).join(' | ') }} -->
-            </div>
+            {{ getModelById(data.model)?.name ?? data.model }}
           </template>
         </Column>
         <Column class="w-24 !text-end">
           <template #body="{ data }">
             <Button
               icon="pi pi-info"
-              @click="routeToEvaluationDetails(data)"
+              @click="routeToUsageDetails(data)"
               severity="secondary"
               rounded
             ></Button>

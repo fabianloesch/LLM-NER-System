@@ -10,11 +10,11 @@ from app.services.usage_service import UsageService
 # ============================================================================
 
 @pytest.fixture
-def test_usage_service(test_db_client, mock_openrouter_service):
+def test_usage_service(test_db_client, mock_llm_gateway_service):
     """UsageService with Test Dependencies"""
     return UsageService(
         mongo_db_client=test_db_client,
-        openrouter_service=mock_openrouter_service
+        llm_gateway_service=mock_llm_gateway_service
     )
 
 

@@ -9,8 +9,8 @@ class MongoDbClient:
     def __init__(self):
         self.client = MongoClient(self.connection_string)
         self.database =  self.client.LLM_NER_SYSTEM_DB
-        self.usage_collection = self.database.Usages
-        self.evaluation_collection = self.database.Evaluations
+        self.usage_collection = self.database.UsageStorage
+        self.evaluation_collection = self.database.EvaluationStorage
 
     def insert_one(self, collection: Collection, document):
         document["created_datetime_utc"] = datetime.now(timezone.utc).isoformat()

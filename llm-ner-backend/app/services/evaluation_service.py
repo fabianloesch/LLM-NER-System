@@ -1,4 +1,4 @@
-from app.openrouter.openrouter_service import OpenRouterService
+from app.llm_gateway.llm_gateway_service import LlmGatewayService
 from app.models.evaluation_dtos import CorpusEntry
 import app.core.utils as utils
 from app.db.mongo_db_client import MongoDbClient
@@ -6,13 +6,13 @@ from bson import ObjectId
 
 class EvaluationService:
 
-    def __init__(self, mongo_db_client: MongoDbClient, openrouter_service: OpenRouterService = None):
+    def __init__(self, mongo_db_client: MongoDbClient, llm_gateway_service: LlmGatewayService = None):
         self._mongo_db_client = mongo_db_client
-        self._openrouter = openrouter_service
+        self._llm_gateway = llm_gateway_service
 
     async def create_evaluation_response(self, corpus: list[CorpusEntry], llm_ids: list[str]):
         entity_classes = utils.get_distinct_entity_classes(corpus)
-        batch_run = await self._openrouter.run_ner_model_batch(corpus, entity_classes, llm_ids)
+        batch_run = await self._llm_gateway.run_ner_model_batch(corpus, entity_classes, llm_ids)
         result = {}
         for llm_id in llm_ids:
             llm_base_metrics = {}

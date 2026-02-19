@@ -7,7 +7,7 @@ from unittest.mock import AsyncMock
 import os
 
 from app.db.mongo_db_client import MongoDbClient
-from app.openrouter.openrouter_service import OpenRouterService
+from app.llm_gateway.llm_gateway_service import LlmGatewayService
 
 
 # ============================================================================
@@ -35,19 +35,19 @@ def test_db_client(test_mongo_client):
     # Override connection with Test-DB
     test_db_client.client = test_mongo_client
     test_db_client.database = test_mongo_client.LLM_NER_SYSTEM_DB_TEST
-    test_db_client.usage_collection = test_db_client.database.Usages
-    test_db_client.evaluation_collection = test_db_client.database.Evaluations
+    test_db_client.usage_collection = test_db_client.database.UsageStorage
+    test_db_client.evaluation_collection = test_db_client.database.EvaluationStorage
     
     yield test_db_client
     
     # Cleanup
-    test_db_client.database.Usages.delete_many({})
-    test_db_client.database.Evaluations.delete_many({})
+    test_db_client.database.UsageStorage.delete_many({})
+    test_db_client.database.EvaluationStorage.delete_many({})
 
 
 @pytest.fixture
-def mock_openrouter_service():
-    mock_service = AsyncMock(spec=OpenRouterService)
+def mock_llm_gateway_service():
+    mock_service = AsyncMock(spec=LlmGatewayService)
     
     # Sample return value for run_ner_model
     mock_service.run_ner_model.return_value = {

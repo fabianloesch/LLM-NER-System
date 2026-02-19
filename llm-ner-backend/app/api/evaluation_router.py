@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends
 from app.models.evaluation_dtos import EvaluationRequestDto, EvaluationResponseDto, AllEvaluationsResponseDto
-from app.openrouter.openrouter_service import OpenRouterService
-from app.openrouter.openrouter_client import OpenRouterClient
+from app.llm_gateway.llm_gateway_service import LlmGatewayService
+from app.llm_gateway.llm_gateway_client import LlmGatewayClient
 from app.services.evaluation_service import EvaluationService
 from app.db.mongo_db_client import MongoDbClient
 
@@ -10,7 +10,7 @@ router = APIRouter()
 def get_evaluation_service():
     return EvaluationService(
         MongoDbClient(),
-        OpenRouterService(OpenRouterClient())
+        LlmGatewayService(LlmGatewayClient())
         )
 
 @router.post("/modelEvaluation", response_model=EvaluationResponseDto)

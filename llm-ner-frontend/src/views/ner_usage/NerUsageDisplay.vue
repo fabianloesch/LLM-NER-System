@@ -67,7 +67,7 @@ const restart = () => {
 
 <template>
   <div v-if="data" class="card">
-    <h2 class="font-semibold text-2xl mb-5">NER Result Display</h2>
+    <h2 class="font-semibold text-2xl mb-5">NER Usage Display</h2>
 
     <!-- Metadaten -->
     <div class="mb-5">

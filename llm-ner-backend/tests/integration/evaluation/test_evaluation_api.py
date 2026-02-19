@@ -11,7 +11,7 @@ class TestPostEvaluationEndpoints:
     def test_create_evaluation_success(
         self, 
         client, 
-        mock_openrouter_service,
+        mock_llm_gateway_service,
         sample_evaluation_request
     ):
         response = client.post("/api/modelEvaluation", json=sample_evaluation_request)
@@ -26,7 +26,7 @@ class TestPostEvaluationEndpoints:
         assert "created_datetime_utc" in result
         assert "evaluations" in result
         
-        mock_openrouter_service.run_ner_model_batch.assert_called_once()
+        mock_llm_gateway_service.run_ner_model_batch.assert_called_once()
     
     def test_create_evaluation_stores_in_database(
         self, 

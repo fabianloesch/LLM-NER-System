@@ -1,10 +1,10 @@
-from app.openrouter.openrouter_client import OpenRouterClient
+from app.llm_gateway.llm_gateway_client import LlmGatewayClient
 from datetime import datetime, timezone
 import app.core.utils as utils
 import asyncio
 
-class OpenRouterService:
-    def __init__(self, client: OpenRouterClient):
+class LlmGatewayService:
+    def __init__(self, client: LlmGatewayClient):
         self.client = client
 
     async def get_available_models(self):

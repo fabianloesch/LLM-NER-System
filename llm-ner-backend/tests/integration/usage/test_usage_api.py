@@ -10,7 +10,7 @@ class TestModelRunEndpoints:
     def test_create_model_run_success(
         self, 
         client, 
-        mock_openrouter_service,
+        mock_llm_gateway_service,
         sample_usage_run_request
     ):
         response = client.post("/api/modelRun", json=sample_usage_run_request)
@@ -26,7 +26,7 @@ class TestModelRunEndpoints:
         assert "created_datetime_utc" in result
         
         # OpenRouter should be called
-        mock_openrouter_service.run_ner_model.assert_called_once_with(
+        mock_llm_gateway_service.run_ner_model.assert_called_once_with(
             sample_usage_run_request["text"],
             sample_usage_run_request["entity_classes"],
             sample_usage_run_request["llm_id"]

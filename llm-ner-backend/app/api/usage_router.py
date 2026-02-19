@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends
 from app.models.usage_dtos import UsageResponseDto, UsageRequestDto, AllUsagesResponseDto
-from app.openrouter.openrouter_service import OpenRouterService
-from app.openrouter.openrouter_client import OpenRouterClient
+from app.llm_gateway.llm_gateway_service import LlmGatewayService
+from app.llm_gateway.llm_gateway_client import LlmGatewayClient
 from app.services.usage_service import UsageService
 from app.db.mongo_db_client import MongoDbClient
 
@@ -10,7 +10,7 @@ router = APIRouter()
 def get_usage_service():
     return UsageService(
         MongoDbClient(),
-        OpenRouterService(OpenRouterClient())
+        LlmGatewayService(LlmGatewayClient())
         )
 
 @router.post("/modelRun", response_model=UsageResponseDto)
